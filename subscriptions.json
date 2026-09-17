@@ -8,9 +8,9 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 366,
+      "subscriptionDays": 365,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
-      "subscription_end_date": "2027-09-15T23:59:59.999Z",
+      "subscription_end_date": "2027-09-17T23:59:59.999Z",
       "reports": [
         {
           "id": "GSL26091549804",
@@ -39,10 +39,10 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-15T21:09:25.479Z",
-      "daysRemaining": 366,
-      "daysUsed": 0,
-      "reportsCount": 0
+      "updatedAt": "2026-09-17T19:04:09.570Z",
+      "daysRemaining": 364,
+      "daysUsed": 2,
+      "reportsCount": 1
     }
   },
   "transactions": [

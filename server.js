@@ -2152,22 +2152,22 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="margin-top:${footerMarginTop};">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:135px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
       
-      <!-- Left: QR Code + Text (QR raised to margin-top: 10px, compact 8px gap to text) -->
+      <!-- Left: QR Code + Text (QR with margin-bottom: 18px for clear spacing to text) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:8px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}`)}" style="width:72px;height:72px;margin-top:10px;margin-bottom:18px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiry?id=${d.leaveId}&nin=${d.nationalId}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:1px; background-color:#cccccc; height:135px; margin-top: 5px;"></div>
+      <div style="width:1px; background-color:#cccccc; height:155px; margin-top: 5px;"></div>
 
-      <!-- Right: MOH Logo + Hospital Name -->
+      <!-- Right: MOH Logo (enlarged to 115px) + Hospital Name -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:88px;object-fit:contain;margin-bottom:8px;">
+        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:115px;object-fit:contain;margin-bottom:6px;">
         <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
         <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
