@@ -39,13 +39,35 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-17T21:32:31.039Z",
+      "updatedAt": "2026-09-17T22:49:59.861Z",
       "daysRemaining": 366,
       "daysUsed": 2,
       "reportsCount": 1
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789685399861_h58e4a",
+      "timestamp": "2026-09-17T22:49:59.861Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789685399856 (اشتراك غير محدود)"
+    },
+    {
+      "id": "tx_1789684978918_wtj3vu",
+      "timestamp": "2026-09-17T22:42:58.918Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789684978913 (اشتراك غير محدود)"
+    },
     {
       "id": "tx_1789680751039_b1ifai",
       "timestamp": "2026-09-17T21:32:31.039Z",
