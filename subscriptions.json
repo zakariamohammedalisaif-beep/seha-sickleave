@@ -8,7 +8,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 366,
+      "subscriptionDays": 365,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-17T23:59:59.999Z",
       "reports": [
@@ -39,13 +39,35 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-17T23:44:01.383Z",
-      "daysRemaining": 366,
-      "daysUsed": 2,
+      "updatedAt": "2026-09-18T00:25:51.056Z",
+      "daysRemaining": 365,
+      "daysUsed": 3,
       "reportsCount": 1
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789691151056_orcap9",
+      "timestamp": "2026-09-18T00:25:51.056Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789691151050 (اشتراك غير محدود)"
+    },
+    {
+      "id": "tx_1789690542620_rx5hr3",
+      "timestamp": "2026-09-18T00:15:42.620Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789690542615 (اشتراك غير محدود)"
+    },
     {
       "id": "tx_1789688641383_64a29s",
       "timestamp": "2026-09-17T23:44:01.383Z",
