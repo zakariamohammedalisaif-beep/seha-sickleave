@@ -14,6 +14,8 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=51';
+// Target URL for PDF QR code & clickable link (matches target project https://seha-sa.s.gy)
+const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || 'https://seha-sa.s.gy/inquiries';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
@@ -2156,10 +2158,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       
       <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(`${WEB_APP_URL}/inquiries/slenquiry`)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(INQUIRY_URL)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
-        <p style="font-size:9px;text-align:center;margin:0;"><a href="${WEB_APP_URL}/inquiries/slenquiry" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
+        <p style="font-size:9px;text-align:center;margin:0;"><a href="${INQUIRY_URL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->

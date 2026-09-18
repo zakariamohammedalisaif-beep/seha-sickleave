@@ -39,13 +39,24 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T00:25:51.056Z",
+      "updatedAt": "2026-09-18T01:12:07.129Z",
       "daysRemaining": 365,
       "daysUsed": 3,
       "reportsCount": 1
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789693927129_u5bqdy",
+      "timestamp": "2026-09-18T01:12:07.129Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789693927123 (اشتراك غير محدود)"
+    },
     {
       "id": "tx_1789691151056_orcap9",
       "timestamp": "2026-09-18T00:25:51.056Z",
