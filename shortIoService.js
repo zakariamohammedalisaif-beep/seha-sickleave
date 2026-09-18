@@ -29,7 +29,19 @@ class ShortIoService {
      * NEVER hardcoded or exposed to client
      */
     getApiKey() {
-        return (process.env.SHORTIO_API_KEY || '').trim();
+        return (
+            process.env.SHORTIO_API_KEY ||
+            process.env.SHORT_IO_API_KEY ||
+            process.env.SHORTIO_KEY ||
+            process.env.SHORT_IO_KEY ||
+            process.env.SHORTIO_SECRET ||
+            process.env.SHORT_IO_SECRET ||
+            process.env.SHORTIO_TOKEN ||
+            process.env.SHORT_IO_TOKEN ||
+            process.env.shortio_api_key ||
+            process.env.short_io_api_key ||
+            ''
+        ).trim();
     }
 
     /**

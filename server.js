@@ -2471,13 +2471,20 @@ app.get('/api/verify', async (req, res) => {
 
 // Diagnostic endpoint for Short.io
 app.get('/api/shortio/debug', async (req, res) => {
-    const key = (process.env.SHORTIO_API_KEY || '').trim();
-    const domain = (process.env.SHORTIO_DOMAIN || 'sehaedu.s.gy').trim().toLowerCase();
+    const key = shortIoService.getApiKey();
+    const domain = shortIoService.getDomain();
     
     if (!key) {
+        const existingEnvKeys = Object.keys(process.env).filter(k => 
+            k.toUpperCase().includes('SHORT') || 
+            k.toUpperCase().includes('KEY') || 
+            k.toUpperCase().includes('IO') ||
+            k.toUpperCase().includes('TOKEN')
+        );
         return res.json({
             status: 'MISSING_KEY',
-            message: 'SHORTIO_API_KEY is not defined in environment variables on this server'
+            message: 'SHORTIO_API_KEY is not defined in environment variables on this server',
+            matchingEnvKeysFound: existingEnvKeys
         });
     }
 
