@@ -5,6 +5,7 @@ process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
 const path = require('path');
 const fs = require('fs').promises;
+const shortIoService = require('./shortIoService');
 
 const crypto = require('crypto');
 let currentAdminToken = null;
@@ -1865,6 +1866,29 @@ app.post('/api/report/:chatId', async (req, res) => {
                 }
             }
             
+            // Ensure Short.io shortURL is generated and attached
+            const leaveId = shortIoService.sanitizePath(reportData.id || (reportData.data && (reportData.data.leaveId || reportData.data.service_code)));
+            if (leaveId) {
+                if (!reportData.shortURL) {
+                    try {
+                        const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(leaveId)}`;
+                        const shortRes = await shortIoService.createShortLink({
+                            originalURL: originalInquiryUrl,
+                            path: leaveId,
+                            allowDuplicates: false
+                        });
+                        reportData.shortURL = shortRes.shortURL;
+                    } catch (e) {
+                        reportData.shortURL = shortIoService.buildFallbackUrl(leaveId);
+                    }
+                }
+                if (reportData.data) {
+                    reportData.data.leaveId = reportData.data.leaveId || leaveId;
+                    reportData.data.service_code = reportData.data.service_code || leaveId;
+                    reportData.data.short_url = reportData.data.short_url || reportData.shortURL;
+                }
+            }
+
             if (isUpdate) {
                 userSub.reports[index] = reportData;
             } else {
@@ -1873,7 +1897,7 @@ app.post('/api/report/:chatId', async (req, res) => {
             
             userSub.updatedAt = new Date().toISOString();
             await saveLocalSubscriptions(data);
-            res.json({ success: true, points: userSub.points });
+            res.json({ success: true, points: userSub.points, shortURL: reportData.shortURL });
         });
     } catch (err) {
         if (!res.headersSent) res.status(500).json({ success: false, error: err.message });
@@ -2027,6 +2051,32 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const nhicLogo = await imgToBase64('الشعارات/dfhZfyJM_400x400 (1).jpg');
 
         const d = reportData;
+        // 1. Ensure unique Leave ID / Service Code
+        if (!d.leaveId) {
+            d.leaveId = reportId || ('SL' + Math.random().toString(36).substring(2, 8).toUpperCase());
+        }
+        const sanitizedLeaveId = shortIoService.sanitizePath(d.leaveId);
+
+        // 2. Prepare educational inquiry original URL for this record
+        const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(sanitizedLeaveId)}`;
+
+        // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback)
+        let shortURL = d.shortURL || d.short_url;
+        if (!shortURL) {
+            try {
+                const shortResult = await shortIoService.createShortLink({
+                    originalURL: originalInquiryUrl,
+                    path: sanitizedLeaveId,
+                    allowDuplicates: false
+                });
+                shortURL = shortResult.shortURL;
+            } catch (shortErr) {
+                console.error('[ShortIoService] Error creating short link:', shortErr.message);
+                shortURL = shortIoService.buildFallbackUrl(sanitizedLeaveId);
+            }
+        }
+        d.shortURL = shortURL;
+
         let formattedDurationAr = d.durationAr || '';
         if (formattedDurationAr && !formattedDurationAr.includes('<span dir="ltr">')) {
             formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
@@ -2158,10 +2208,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       
       <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(INQUIRY_URL)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">
         <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
-        <p style="font-size:9px;text-align:center;margin:0;"><a href="${INQUIRY_URL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
+        <p style="font-size:9px;text-align:center;margin:0;"><a href="${shortURL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
@@ -2206,11 +2256,24 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         
         addLog('Launching puppeteer...');
-        const browser = await puppeteer.launch({
+        const launchOptions = {
             headless: 'new',
             timeout: 90000,
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--font-render-hinting=none']
-        });
+        };
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        } else if (process.platform === 'win32') {
+            const fsSync = require('fs');
+            const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+            const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            if (fsSync.existsSync(edgePath)) {
+                launchOptions.executablePath = edgePath;
+            } else if (fsSync.existsSync(chromePath)) {
+                launchOptions.executablePath = chromePath;
+            }
+        }
+        const browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'load', timeout: 90000 });
         
@@ -2253,6 +2316,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                         patientName: d.nameAr || d.patient_name_ar || ((d.type === 'companion' || d.type === 'companion_review') ? d.escort_name_ar : ''),
                         type: d.type || 'sick',
                         issueDate: d.issueDate || d.issue_date || new Date().toISOString().slice(0, 10),
+                        shortURL: shortURL,
                         data: {
                             admission_date: d.startDate || d.admission_date,
                             discharge_date: d.endDate || d.discharge_date,
@@ -2269,7 +2333,10 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                             hospital_ar: d.hospitalAr || d.hospital_ar,
                             hospital_en: d.hospitalEn || d.hospital_en,
                             hospital_type: d.hospitalType || d.hospital_type,
-                            license_number: d.licenseNumber || d.license_number
+                            license_number: d.licenseNumber || d.license_number,
+                            leaveId: sanitizedLeaveId,
+                            service_code: sanitizedLeaveId,
+                            short_url: shortURL
                         }
                     };
                     if (rIdx >= 0) {
@@ -2285,7 +2352,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             console.error('Error auto-saving report in generate-native-pdf:', saveErr.message);
         }
 
-        res.json({ success: true, fileId: message.document.file_id, reportId: reportId });
+        res.json({ success: true, fileId: message.document.file_id, reportId: reportId, shortURL: shortURL });
 
     } catch (err) {
         addLog(`Error generating HTML for PDF: ${err.message}`);
@@ -2400,6 +2467,17 @@ app.get('/api/verify', async (req, res) => {
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
+});
+
+// Direct Slug Redirect Route (e.g. /B82LM4 -> /inquiries/slenquiry?id=B82LM4)
+app.get('/:slug([A-Za-z0-9_-]{4,32})', (req, res, next) => {
+    const rawSlug = req.params.slug;
+    const slug = shortIoService.sanitizePath(rawSlug);
+    const reservedRoutes = ['api', 'admin', 'assets', 'verify', 'inquiry', 'inquiries', 'setup', 'health', 'slenquiry', 'favicon.ico'];
+    if (slug && !rawSlug.includes('.') && !reservedRoutes.includes(rawSlug.toLowerCase())) {
+        return res.redirect(`/inquiries/slenquiry?id=${encodeURIComponent(slug)}`);
+    }
+    next();
 });
 
 // Ensure SPA routes always return index.html instead of Not Found
