@@ -2469,6 +2469,56 @@ app.get('/api/verify', async (req, res) => {
     }
 });
 
+// Diagnostic endpoint for Short.io
+app.get('/api/shortio/debug', async (req, res) => {
+    const key = (process.env.SHORTIO_API_KEY || '').trim();
+    const domain = (process.env.SHORTIO_DOMAIN || 'sehaedu.s.gy').trim().toLowerCase();
+    
+    if (!key) {
+        return res.json({
+            status: 'MISSING_KEY',
+            message: 'SHORTIO_API_KEY is not defined in environment variables on this server'
+        });
+    }
+
+    try {
+        const testPath = 'T' + Math.random().toString(36).substring(2, 7).toUpperCase();
+        const response = await fetch('https://api.short.io/links', {
+            method: 'POST',
+            headers: {
+                'Authorization': key,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                domain: domain,
+                originalURL: `${WEB_APP_URL}/inquiries/slenquiry?id=${testPath}`,
+                path: testPath,
+                allowDuplicates: true
+            })
+        });
+
+        const status = response.status;
+        const text = await response.text();
+        let parsed = null;
+        try { parsed = JSON.parse(text); } catch(e) { parsed = text; }
+
+        res.json({
+            keyConfigured: true,
+            keyLength: key.length,
+            keyPrefix: key.substring(0, 4) + '***' + key.substring(key.length - 2),
+            domain: domain,
+            shortIoHttpStatus: status,
+            shortIoResponse: parsed
+        });
+    } catch (err) {
+        res.json({
+            status: 'ERROR',
+            error: err.message
+        });
+    }
+});
+
 // Direct Slug Redirect Route (e.g. /B82LM4 -> /inquiries/slenquiry?id=B82LM4)
 app.get('/:slug([A-Za-z0-9_-]{4,32})', (req, res, next) => {
     const rawSlug = req.params.slug;
