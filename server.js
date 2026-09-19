@@ -2098,13 +2098,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; border-collapse: collapse; }
+  .table-wrapper { width: 724px; border-radius: 8px; overflow: hidden; border: 2px solid #cccccc; }
   tr { height: 40px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
+  .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; text-align: center !important; vertical-align: middle !important; }
   .label-ar { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
   .val { border: 2px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: bold; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; font-size: 12.5px; font-weight: bold; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
-  .dur-label { font-weight: bold; font-size: 12.5px; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; font-size: 12.8px; font-weight: bold; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
+  .dur-label { font-weight: bold; font-size: 13px; }
   tr:nth-child(even) td { background-color: #f7f7f7; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
@@ -2128,7 +2129,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
   <!-- Data Table & Footer Container -->
   <div style="position:absolute;top:226px;left:35px;width:724px;">
-  <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;border:2px solid #cccccc;">
+  <div class="table-wrapper">
+  <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:150px;">Leave ID</td>
       <td class="val" colspan="2" style="width:424px; font-family: 'Arial', sans-serif; font-weight: bold; font-size: 13.5px; letter-spacing: 0.5px; white-space: nowrap;">${d.leaveId || ''}</td>
@@ -2136,7 +2138,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr class="dur-row">
       <td class="dur-label" style="width:150px;">Leave Duration</td>
-      <td style="width:212px; white-space: nowrap;">${d.durationEn || ''}</td>
+      <td style="width:212px; white-space: nowrap; font-size: 13px;">${d.durationEn || ''}</td>
       <td dir="rtl" style="width:212px; white-space: nowrap;">${formattedDurationAr}</td>
       <td class="dur-label" style="width:150px;">مدة الإجازة</td>
     </tr>
@@ -2159,7 +2161,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">${d.nameLabelEn || 'Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:12.5px;letter-spacing:0.3px;">${d.nameEn || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:13.2px;font-weight:bold;letter-spacing:0.3px;text-transform:uppercase;">${d.nameEn || ''}</td>
       <td class="val" dir="rtl" style="font-size:13.5px;">${d.nameAr || ''}</td>
       <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
     </tr>
@@ -2188,7 +2190,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">${d.docLabelEn || 'Practitioner Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:12.5px;">${d.doctorEn || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:13.2px;font-weight:bold;text-transform:uppercase;">${d.doctorEn || ''}</td>
       <td class="val" dir="rtl" style="font-size:13.5px;">${d.doctorAr || ''}</td>
       <td class="label-ar">${d.docLabelAr || 'اسم الممارس'}</td>
     </tr>
@@ -2199,6 +2201,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <td class="label-ar">المسمى الوظيفى</td>
     </tr>
   </table>
+  </div>
 
   <!-- ===== FOOTER ===== -->
   <div style="margin-top:${footerMarginTop};">
@@ -2206,9 +2209,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
     <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
       
-      <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 14px -> text starts at 94px) -->
+      <!-- Left: QR Code + Text (Top container 98px aligns text with hospital name) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:14px;">
+        <div style="height:98px; display:flex; align-items:center; justify-content:center;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;">
+        </div>
         <p style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:9px;color:#222;font-weight:bold;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:10px;font-weight:bold;text-align:center;margin:0;"><a href="${shortURL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
@@ -2217,9 +2222,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <!-- Center Vertical Divider -->
       <div style="width:2px; background-color:#cccccc; height:155px; margin-top: 5px;"></div>
 
-      <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
+      <!-- Right: MOH Logo & Hospital (Top container 98px aligns text with barcode text on exact same line) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:92px;object-fit:contain;margin-bottom:8px;">
+        <div style="height:98px; display:flex; align-items:center; justify-content:center;">
+          <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:90px;object-fit:contain;">
+        </div>
         <h3 style="font-size:13.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:240px;word-wrap:break-word;line-height:1.4;">${d.hospitalAr || ''}</h3>
         <h4 style="font-size:11px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:240px;word-wrap:break-word;line-height:1.4;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
