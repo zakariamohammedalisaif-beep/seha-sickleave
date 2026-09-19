@@ -2097,15 +2097,15 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   html { background: #fff !important; }
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
-  table { border-spacing: 0; direction: ltr; }
-  tr { height: 41px; }
+  table { border-spacing: 0; direction: ltr; border-collapse: collapse; }
+  tr { height: 43px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 12px; width: 155px; text-align: center !important; vertical-align: middle !important; }
-  .label-ar { border: 1px solid #dee2e6; padding: 11px 8px; font-weight: bold; color: #1a5b8c; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 1px solid #dee2e6; padding: 11px 8px; color: #1A365D; font-weight: normal; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 1px solid #dee2e6; padding: 11px 8px; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
-  .dur-label { font-weight: bold; }
-  tr:nth-child(even) td { background-color: #f5f7fa; }
+  .label-en { border: 1.2px solid #8ca6c0; padding: 9px 8px; font-weight: bold; color: #154d79; font-size: 13px; width: 155px; text-align: center !important; vertical-align: middle !important; }
+  .label-ar { border: 1.2px solid #8ca6c0; padding: 9px 8px; font-weight: bold; color: #154d79; font-size: 14px; width: 155px; text-align: center !important; vertical-align: middle !important; }
+  .val { border: 1.2px solid #8ca6c0; padding: 9px 8px; color: #0d2847; font-weight: 500; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.2px solid #8ca6c0; padding: 9px 8px; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
+  .dur-label { font-weight: bold; font-size: 13px; }
+  tr:nth-child(even) td { background-color: #f7f9fb; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
@@ -2128,7 +2128,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
   <!-- Data Table & Footer Container -->
   <div style="position:absolute;top:228px;left:40px;width:714px;">
-  <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;table-layout:fixed;">
+  <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;border:1.2px solid #8ca6c0;">
     <tr>
       <td class="label-en" style="width:155px;">Leave ID</td>
       <td class="val" colspan="2" style="width:404px; font-family: 'Arial', sans-serif; white-space: nowrap;">${d.leaveId || ''}</td>
