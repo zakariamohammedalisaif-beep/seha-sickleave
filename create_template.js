@@ -29,83 +29,83 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
     </div>
 
     <!-- === TABLE === -->
-    <div style="width: 100%; margin-bottom: 30px;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; table-layout: fixed; word-wrap: break-word; word-break: break-word; white-space: normal !important;">
+    <div style="width: 100%; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; table-layout: fixed; border: 1px solid #7ea3c8;">
             <colgroup>
-                <col style="width: 20%;">
-                <col style="width: 30%;">
-                <col style="width: 30%;">
-                <col style="width: 20%;">
+                <col style="width: 20.7%;">
+                <col style="width: 29.3%;">
+                <col style="width: 29.3%;">
+                <col style="width: 20.7%;">
             </colgroup>
             <tbody>
                 <tr>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Leave ID</td>
-                    <td colspan="2" id="pdf-leave-id" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333; font-weight: bold;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">رقم الإجازة</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Leave ID</td>
+                    <td colspan="2" id="pdf-leave-id" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-weight: bold; font-size: 13px; letter-spacing: 0.5px; font-family: 'Arial', sans-serif; vertical-align: middle; white-space: nowrap;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">رمز الإجازة</td>
                 </tr>
-                <tr style="background-color: #2b4b7c; color: white;">
-                    <td style="border: 1px solid #2b4b7c; padding: 14px 10px; height: 48px; font-weight: bold; background-color: #2b4b7c;">Leave Duration</td>
-                    <td id="pdf-duration-en" style="border: 1px solid #2b4b7c; padding: 14px 10px; height: 48px; background-color: #2b4b7c;"></td>
-                    <td id="pdf-duration-ar" dir="rtl" style="border: 1px solid #2b4b7c; padding: 14px 10px; height: 48px; background-color: #2b4b7c;"></td>
-                    <td style="border: 1px solid #2b4b7c; padding: 14px 10px; height: 48px; font-weight: bold; background-color: #2b4b7c;">مدة الإجازة</td>
-                </tr>
-                <tr>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Admission Date</td>
-                    <td id="pdf-admission-g" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-admission-h" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">تاريخ الدخول</td>
-                </tr>
-                <tr style="background-color: #eef3f7;">
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Discharge Date</td>
-                    <td id="pdf-discharge-g" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-discharge-h" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">تاريخ الخروج</td>
+                <tr style="background-color: #1F3864; color: white;">
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 4px; height: 36px; font-weight: bold; background-color: #1F3864; vertical-align: middle;">Leave Duration</td>
+                    <td id="pdf-duration-en" style="border: 1px solid #7ea3c8; padding: 5px 4px; height: 36px; background-color: #1F3864; vertical-align: middle; white-space: nowrap;"></td>
+                    <td id="pdf-duration-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 4px; height: 36px; background-color: #1F3864; vertical-align: middle; white-space: nowrap;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 4px; height: 36px; font-weight: bold; background-color: #1F3864; vertical-align: middle;">مدة الإجازة</td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Issue Date</td>
-                    <td colspan="2" id="pdf-issue-date" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">تاريخ إصدار التقرير</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Admission Date</td>
+                    <td id="pdf-admission-g" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td id="pdf-admission-h" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">تاريخ الدخول</td>
                 </tr>
-                <tr style="background-color: #eef3f7;">
-                    <td id="pdf-name-label-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Name</td>
-                    <td id="pdf-name-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-name-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333; font-family: 'Arial', sans-serif;"></td>
-                    <td id="pdf-name-label-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">الاسم</td>
+                <tr style="background-color: #f2f4f6;">
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Discharge Date</td>
+                    <td id="pdf-discharge-g" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td id="pdf-discharge-h" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">تاريخ الخروج</td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">National ID / Iqama</td>
-                    <td colspan="2" id="pdf-national-id" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">رقم الهوية/الإقامة</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Issue Date</td>
+                    <td colspan="2" id="pdf-issue-date" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">تاريخ إصدار التقرير</td>
                 </tr>
-                <tr style="background-color: #eef3f7;">
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Nationality</td>
-                    <td id="pdf-nationality-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;">Saudi Arabia</td>
-                    <td id="pdf-nationality-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;">السعودية</td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">الجنسية</td>
+                <tr style="background-color: #f2f4f6;">
+                    <td id="pdf-name-label-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Name</td>
+                    <td id="pdf-name-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-family:'Arial',sans-serif; font-size: 11.5px; letter-spacing: 0.3px; vertical-align: middle;"></td>
+                    <td id="pdf-name-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12.5px; vertical-align: middle;"></td>
+                    <td id="pdf-name-label-ar" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">الاسم</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">National ID / Iqama</td>
+                    <td colspan="2" id="pdf-national-id" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 12.5px; vertical-align: middle; white-space: nowrap;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">رقم الهوية/الاقامه</td>
+                </tr>
+                <tr style="background-color: #f2f4f6;">
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Nationality</td>
+                    <td id="pdf-nationality-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;">Saudi Arabia</td>
+                    <td id="pdf-nationality-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;">السعودية</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">الجنسية</td>
                 </tr>
                 <tr id="pdf-relation-row" style="display:none;">
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Relation</td>
-                    <td id="pdf-relation-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-relation-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">صلة القرابة</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Relation</td>
+                    <td id="pdf-relation-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td id="pdf-relation-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">صلة القرابة</td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Employer</td>
-                    <td id="pdf-employer-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-employer-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">جهة العمل</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Employer</td>
+                    <td id="pdf-employer-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td id="pdf-employer-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12px; vertical-align: middle;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">جهة العمل</td>
                 </tr>
-                <tr style="background-color: #eef3f7;">
-                    <td id="pdf-doc-label-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Practitioner Name</td>
-                    <td id="pdf-doctor-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-doctor-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-doc-label-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">اسم الممارس</td>
+                <tr style="background-color: #f2f4f6;">
+                    <td id="pdf-doc-label-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Practitioner Name</td>
+                    <td id="pdf-doctor-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-family:'Arial',sans-serif; font-size: 11.5px; vertical-align: middle;"></td>
+                    <td id="pdf-doctor-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12.5px; vertical-align: middle;"></td>
+                    <td id="pdf-doc-label-ar" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">اسم الممارس</td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">Position</td>
-                    <td id="pdf-position-en" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td id="pdf-position-ar" style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; color: #333;"></td>
-                    <td style="border: 1px solid #c9d6e5; padding: 14px 10px; height: 48px; font-weight: bold; color: #216ba5;">المسمى الوظيفي</td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Position</td>
+                    <td id="pdf-position-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
+                    <td id="pdf-position-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12px; vertical-align: middle;"></td>
+                    <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">المسمى الوظيفي</td>
                 </tr>
             </tbody>
         </table>
