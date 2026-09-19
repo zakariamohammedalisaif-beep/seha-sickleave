@@ -2098,13 +2098,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; border-collapse: collapse; }
-  tr { height: 38px; }
+  tr { height: 40px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12px; width: 150px; text-align: center !important; vertical-align: middle !important; }
-  .label-ar { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 1.4px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: 500; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.4px solid #cccccc; padding: 5px 4px; font-size: 12px; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
-  .dur-label { font-weight: bold; font-size: 12px; }
+  .label-en { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
+  .label-ar { border: 1.4px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
+  .val { border: 1.4px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: 500; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.4px solid #cccccc; padding: 5px 4px; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
+  .dur-label { font-weight: bold; font-size: 12.5px; }
   tr:nth-child(even) td { background-color: #f7f7f7; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
@@ -2131,7 +2131,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;border:1.4px solid #cccccc;">
     <tr>
       <td class="label-en" style="width:150px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:424px; font-family: 'Arial', sans-serif; font-weight: bold; font-size: 13px; letter-spacing: 0.5px; white-space: nowrap;">${d.leaveId || ''}</td>
+      <td class="val" colspan="2" style="width:424px; font-family: 'Arial', sans-serif; font-weight: bold; font-size: 13.5px; letter-spacing: 0.5px; white-space: nowrap;">${d.leaveId || ''}</td>
       <td class="label-ar" style="width:150px;">رمز الإجازة</td>
     </tr>
     <tr class="dur-row">
@@ -2159,13 +2159,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">${d.nameLabelEn || 'Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:11.5px;letter-spacing:0.3px;">${d.nameEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:12.5px;">${d.nameAr || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:12px;letter-spacing:0.3px;">${d.nameEn || ''}</td>
+      <td class="val" dir="rtl" style="font-size:13px;">${d.nameAr || ''}</td>
       <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
     </tr>
     <tr>
       <td class="label-en">National ID / Iqama</td>
-      <td class="val" colspan="2" style="font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 12.5px; white-space: nowrap;">${d.nationalId || ''}</td>
+      <td class="val" colspan="2" style="font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 13px; white-space: nowrap;">${d.nationalId || ''}</td>
       <td class="label-ar">رقم الهوية/الاقامه</td>
     </tr>
     <tr>
@@ -2183,19 +2183,19 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <tr>
       <td class="label-en">Employer</td>
       <td class="val">${d.employerEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:12px;">${d.employerAr || ''}</td>
+      <td class="val" dir="rtl" style="font-size:12.5px;">${d.employerAr || ''}</td>
       <td class="label-ar">جهة العمل</td>
     </tr>
     <tr>
       <td class="label-en">${d.docLabelEn || 'Practitioner Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:11.5px;">${d.doctorEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:12.5px;">${d.doctorAr || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:12px;">${d.doctorEn || ''}</td>
+      <td class="val" dir="rtl" style="font-size:13px;">${d.doctorAr || ''}</td>
       <td class="label-ar">${d.docLabelAr || 'اسم الممارس'}</td>
     </tr>
     <tr>
       <td class="label-en">Position</td>
       <td class="val">${d.positionEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:12px;">${d.positionAr || ''}</td>
+      <td class="val" dir="rtl" style="font-size:12.5px;">${d.positionAr || ''}</td>
       <td class="label-ar">المسمى الوظيفى</td>
     </tr>
   </table>
