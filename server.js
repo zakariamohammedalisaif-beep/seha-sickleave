@@ -2113,7 +2113,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
 
   <!-- Header: Geometric graphic (right) -->
-  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:22px;right:30px;opacity:0.8;">
+  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:38px;right:30px;opacity:0.8;">
     <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
   </svg>
   
