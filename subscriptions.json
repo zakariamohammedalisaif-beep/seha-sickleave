@@ -8,7 +8,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 365,
+      "subscriptionDays": 364,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-17T23:59:59.999Z",
       "reports": [
@@ -17,7 +17,11 @@
           "patientName": "ريان أحمد الغامدي",
           "type": "sick",
           "issueDate": "2026-09-15",
+          "shortURL": "https://sehaedu.s.gy/GSL26091549804",
           "data": {
+            "leaveId": "GSL26091549804",
+            "service_code": "GSL26091549804",
+            "short_url": "https://sehaedu.s.gy/GSL26091549804",
             "admission_date": "2026-09-15",
             "discharge_date": "2026-09-15",
             "duration": "1",
@@ -39,9 +43,9 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-18T02:32:26.166Z",
-      "daysRemaining": 365,
-      "daysUsed": 3,
+      "updatedAt": "2026-09-19T14:47:23.812Z",
+      "daysRemaining": 364,
+      "daysUsed": 4,
       "reportsCount": 1
     }
   },

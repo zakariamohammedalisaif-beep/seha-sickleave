@@ -2469,6 +2469,87 @@ app.get('/api/verify', async (req, res) => {
     }
 });
 
+// Sync all reports in database to Short.io and configure domain redirects
+const syncAllReportsToShortIo = async () => {
+    if (!shortIoService.isConfigured()) {
+        console.log('[ShortIoService] Startup sync skipped: SHORTIO_API_KEY not configured');
+        return { success: false, reason: 'SHORTIO_API_KEY not configured' };
+    }
+    try {
+        const inquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry`;
+        
+        // 1. Auto-configure root and 404 redirects on Short.io custom domain
+        const domainConfigRes = await shortIoService.configureDomainRedirects(inquiryUrl).catch(e => ({ success: false, error: e.message }));
+        console.log('[ShortIoService] Domain redirects configured:', domainConfigRes);
+
+        // 2. Scan database and ensure every existing report has a valid short link
+        let syncedCount = 0;
+        let checkedCount = 0;
+        await withDbLock(async () => {
+            const data = await loadLocalSubscriptions();
+            let changed = false;
+
+            for (const chatId of Object.keys(data.subscriptions || {})) {
+                const user = data.subscriptions[chatId];
+                if (user && Array.isArray(user.reports)) {
+                    for (const rep of user.reports) {
+                        checkedCount++;
+                        const leaveId = shortIoService.sanitizePath(rep.id || (rep.data && (rep.data.leaveId || rep.data.service_code)));
+                        if (leaveId) {
+                            try {
+                                const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(leaveId)}`;
+                                const shortRes = await shortIoService.createShortLink({
+                                    originalURL: originalInquiryUrl,
+                                    path: leaveId,
+                                    allowDuplicates: false
+                                });
+                                if (shortRes && shortRes.shortURL && (!rep.shortURL || rep.shortURL !== shortRes.shortURL)) {
+                                    rep.shortURL = shortRes.shortURL;
+                                    if (rep.data) {
+                                        rep.data.short_url = shortRes.shortURL;
+                                        rep.data.leaveId = rep.data.leaveId || leaveId;
+                                        rep.data.service_code = rep.data.service_code || leaveId;
+                                    }
+                                    changed = true;
+                                    syncedCount++;
+                                    console.log(`[ShortIoService] Synced report ${leaveId} -> ${shortRes.shortURL}`);
+                                }
+                            } catch (e) {
+                                console.warn(`[ShortIoService] Could not sync report ${leaveId}:`, e.message);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (changed) {
+                await saveLocalSubscriptions(data);
+                console.log(`[ShortIoService] Synced and saved ${syncedCount} reports to local database.`);
+            }
+        });
+
+        return {
+            success: true,
+            domainConfig: domainConfigRes,
+            reportsChecked: checkedCount,
+            reportsSynced: syncedCount
+        };
+    } catch (err) {
+        console.warn('[ShortIoService] Error during sync:', err.message);
+        return { success: false, error: err.message };
+    }
+};
+
+// Endpoint to trigger manual sync of all reports & domain redirects
+app.get('/api/shortio/sync', async (req, res) => {
+    try {
+        const result = await syncAllReportsToShortIo();
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Diagnostic endpoint for Short.io
 app.get('/api/shortio/debug', async (req, res) => {
     const key = shortIoService.getApiKey();
@@ -2489,7 +2570,7 @@ app.get('/api/shortio/debug', async (req, res) => {
     }
 
     try {
-        const testPath = 'T' + Math.random().toString(36).substring(2, 7).toUpperCase();
+        const testPath = (req.query.path ? shortIoService.sanitizePath(req.query.path) : null) || ('T' + Math.random().toString(36).substring(2, 7).toUpperCase());
         const response = await fetch('https://api.short.io/links', {
             method: 'POST',
             headers: {
@@ -2510,11 +2591,14 @@ app.get('/api/shortio/debug', async (req, res) => {
         let parsed = null;
         try { parsed = JSON.parse(text); } catch(e) { parsed = text; }
 
+        const domains = await shortIoService.getDomains().catch(() => []);
+
         res.json({
             keyConfigured: true,
             keyLength: key.length,
             keyPrefix: key.substring(0, 4) + '***' + key.substring(key.length - 2),
             domain: domain,
+            domainsInAccount: domains.map(d => ({ id: d.id, domain: d.hostname || d.domain, rootRedirect: d.rootRedirect, notFoundRedirect: d.notFoundRedirect })),
             shortIoHttpStatus: status,
             shortIoResponse: parsed
         });
@@ -2682,6 +2766,7 @@ app.get('/setup', async (req, res) => {
 const serverPromise = startServer().then(async (srv) => {
     try {
         await bootstrapOwnerAccount();
+        syncAllReportsToShortIo().catch(e => console.warn('Startup Short.io sync error:', e.message));
     } catch (e) {
         console.error('Owner bootstrap error:', e.message);
     }

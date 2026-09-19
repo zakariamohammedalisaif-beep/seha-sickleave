@@ -287,6 +287,100 @@ class ShortIoService {
             return null;
         }
     }
+
+    /**
+     * Retrieve all custom domains associated with this Short.io account
+     * GET https://api.short.io/api/domains
+     */
+    async getDomains() {
+        if (!this.isConfigured()) return [];
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/domains`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': this.getApiKey(),
+                    'Accept': 'application/json'
+                },
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                const data = await response.json();
+                return Array.isArray(data) ? data : (data.domains || []);
+            }
+            return [];
+        } catch (e) {
+            clearTimeout(timeoutId);
+            console.warn('[ShortIoService] Error fetching domains:', e.message);
+            return [];
+        }
+    }
+
+    /**
+     * Configure default Root & 404 redirects on Short.io domain
+     * Ensures visiting the root domain or non-existent/expired links redirects
+     * to the inquiry interface instead of showing Short.io 404 page
+     */
+    async configureDomainRedirects(targetInquiryUrl) {
+        if (!this.isConfigured() || !targetInquiryUrl) {
+            return { success: false, error: 'ShortIoService not configured or missing target URL' };
+        }
+
+        try {
+            const domains = await this.getDomains();
+            const configuredDomain = this.getDomain();
+            const found = domains.find(d => (d.hostname || d.domain || '').toLowerCase() === configuredDomain);
+            if (!found || !found.id) {
+                return { success: false, error: `Domain ${configuredDomain} not found in Short.io account` };
+            }
+
+            const domainId = found.id;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
+            // Try both API paths commonly used by Short.io
+            let response = await fetch(`${API_BASE_URL}/api/domains/${domainId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': this.getApiKey(),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    rootRedirect: targetInquiryUrl,
+                    notFoundRedirect: targetInquiryUrl
+                }),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                response = await fetch(`${API_BASE_URL}/domains/${domainId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': this.getApiKey(),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        rootRedirect: targetInquiryUrl,
+                        notFoundRedirect: targetInquiryUrl
+                    })
+                });
+            }
+
+            clearTimeout(timeoutId);
+            const data = await response.json().catch(() => ({}));
+            return { success: response.ok, data };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    }
 }
 
 // Export singleton instance
