@@ -55,7 +55,7 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
                     <td id="pdf-admission-h" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
                     <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">تاريخ الدخول</td>
                 </tr>
-                <tr style="background-color: #dcdcdc;">
+                <tr style="background-color: #f7f7f7;">
                     <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Discharge Date</td>
                     <td id="pdf-discharge-g" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
                     <td id="pdf-discharge-h" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
@@ -66,7 +66,7 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
                     <td colspan="2" id="pdf-issue-date" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;"></td>
                     <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">تاريخ إصدار التقرير</td>
                 </tr>
-                <tr style="background-color: #dcdcdc;">
+                <tr style="background-color: #f7f7f7;">
                     <td id="pdf-name-label-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Name</td>
                     <td id="pdf-name-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-family:'Arial',sans-serif; font-size: 11.5px; letter-spacing: 0.3px; vertical-align: middle;"></td>
                     <td id="pdf-name-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12.5px; vertical-align: middle;"></td>
@@ -77,7 +77,7 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
                     <td colspan="2" id="pdf-national-id" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 12.5px; vertical-align: middle; white-space: nowrap;"></td>
                     <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">رقم الهوية/الاقامه</td>
                 </tr>
-                <tr style="background-color: #dcdcdc;">
+                <tr style="background-color: #f7f7f7;">
                     <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Nationality</td>
                     <td id="pdf-nationality-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;">Saudi Arabia</td>
                     <td id="pdf-nationality-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; vertical-align: middle;">السعودية</td>
@@ -95,7 +95,7 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
                     <td id="pdf-employer-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12px; vertical-align: middle;"></td>
                     <td style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; font-size: 13px; color: #154d79; vertical-align: middle;">جهة العمل</td>
                 </tr>
-                <tr style="background-color: #dcdcdc;">
+                <tr style="background-color: #f7f7f7;">
                     <td id="pdf-doc-label-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; font-weight: bold; color: #154d79; vertical-align: middle;">Practitioner Name</td>
                     <td id="pdf-doctor-en" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-family:'Arial',sans-serif; font-size: 11.5px; vertical-align: middle;"></td>
                     <td id="pdf-doctor-ar" dir="rtl" style="border: 1px solid #7ea3c8; padding: 5px 6px; height: 36px; color: #0d2847; font-size: 12.5px; vertical-align: middle;"></td>

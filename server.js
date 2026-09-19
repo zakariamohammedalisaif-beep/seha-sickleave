@@ -2105,7 +2105,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   .val { border: 1px solid #7ea3c8; padding: 5px 6px; color: #0d2847; font-weight: 500; font-size: 12px; text-align: center !important; vertical-align: middle !important; }
   .dur-row td { background-color: #1F3864 !important; color: white; border: 1px solid #7ea3c8; padding: 5px 4px; font-size: 12px; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 12px; }
-  tr:nth-child(even) td { background-color: #dcdcdc; }
+  tr:nth-child(even) td { background-color: #f7f7f7; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
