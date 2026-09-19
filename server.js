@@ -2098,7 +2098,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; border-collapse: collapse; }
-  .table-wrapper { width: 724px; border-radius: 8px; overflow: hidden; border: 2px solid #cccccc; }
+  .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 2px solid #cccccc; }
   tr { height: 40px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
   .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; text-align: center !important; vertical-align: middle !important; }
@@ -2138,7 +2138,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr class="dur-row">
       <td class="dur-label" style="width:150px;">Leave Duration</td>
-      <td style="width:212px; white-space: nowrap; font-size: 13px;">${d.durationEn || ''}</td>
+      <td style="width:212px; white-space: nowrap; font-size: 11.8px; font-weight: normal;">${d.durationEn || ''}</td>
       <td dir="rtl" style="width:212px; white-space: nowrap;">${formattedDurationAr}</td>
       <td class="dur-label" style="width:150px;">مدة الإجازة</td>
     </tr>
@@ -2161,7 +2161,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">${d.nameLabelEn || 'Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:13.2px;font-weight:bold;letter-spacing:0.3px;text-transform:uppercase;">${d.nameEn || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:11.8px;font-weight:normal;letter-spacing:0.2px;text-transform:uppercase;">${d.nameEn || ''}</td>
       <td class="val" dir="rtl" style="font-size:13.5px;">${d.nameAr || ''}</td>
       <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
     </tr>
@@ -2172,31 +2172,31 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">Nationality</td>
-      <td class="val">${d.nationalityEn || 'Saudi Arabia'}</td>
+      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.nationalityEn || 'Saudi Arabia'}</td>
       <td class="val" dir="rtl">${d.nationalityAr || 'السعودية'}</td>
       <td class="label-ar">الجنسية</td>
     </tr>
     ${(d.relationEn || d.relationAr) ? `<tr>
       <td class="label-en">Relation</td>
-      <td class="val">${d.relationEn || ''}</td>
+      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.relationEn || ''}</td>
       <td class="val" dir="rtl">${d.relationAr || ''}</td>
       <td class="label-ar">صلة القرابة</td>
     </tr>` : ''}
     <tr>
       <td class="label-en">Employer</td>
-      <td class="val">${d.employerEn || ''}</td>
+      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.employerEn || ''}</td>
       <td class="val" dir="rtl" style="font-size:13px;">${d.employerAr || ''}</td>
       <td class="label-ar">جهة العمل</td>
     </tr>
     <tr>
       <td class="label-en">${d.docLabelEn || 'Practitioner Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:13.2px;font-weight:bold;text-transform:uppercase;">${d.doctorEn || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:11.8px;font-weight:normal;letter-spacing:0.2px;text-transform:uppercase;">${d.doctorEn || ''}</td>
       <td class="val" dir="rtl" style="font-size:13.5px;">${d.doctorAr || ''}</td>
       <td class="label-ar">${d.docLabelAr || 'اسم الممارس'}</td>
     </tr>
     <tr>
       <td class="label-en">Position</td>
-      <td class="val">${d.positionEn || ''}</td>
+      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.positionEn || ''}</td>
       <td class="val" dir="rtl" style="font-size:13px;">${d.positionAr || ''}</td>
       <td class="label-ar">المسمى الوظيفى</td>
     </tr>
@@ -2207,11 +2207,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <div style="margin-top:${footerMarginTop};">
     
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
-    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height:165px;">
       
-      <!-- Left: QR Code + Text (Top container 98px aligns text with hospital name) -->
+      <!-- Left: QR Code + Text (Top container 110px aligns text with hospital name) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <div style="height:98px; display:flex; align-items:center; justify-content:center;">
+        <div style="height:110px; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;">
         </div>
         <p style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
@@ -2220,11 +2220,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       </div>
 
       <!-- Center Vertical Divider -->
-      <div style="width:2px; background-color:#cccccc; height:155px; margin-top: 5px;"></div>
+      <div style="width:2px; background-color:#cccccc; height:165px; margin-top: 5px;"></div>
 
-      <!-- Right: MOH Logo & Hospital (Top container 98px aligns text with barcode text on exact same line) -->
+      <!-- Right: MOH Logo & Hospital (Top container 110px aligns text with barcode text on exact same line) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
-        <div style="height:98px; display:flex; align-items:center; justify-content:center;">
+        <div style="height:110px; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
           <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:90px;object-fit:contain;">
         </div>
         <h3 style="font-size:13.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:240px;word-wrap:break-word;line-height:1.4;">${d.hospitalAr || ''}</h3>
