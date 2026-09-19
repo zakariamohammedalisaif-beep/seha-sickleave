@@ -2082,7 +2082,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             formattedDurationAr = formattedDurationAr.replace(/(\d{2,4}-\d{2}-\d{2,4})/g, '<span dir="ltr">$1</span>');
         }
         const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
-        const footerMarginTop = '14px';
+        const footerMarginTop = '12px';
 
         // Build self-contained HTML matching Sehaty platform exactly
         const html = `<!DOCTYPE html>
@@ -2102,8 +2102,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   td { font-family: 'Tajawal', 'Arial', sans-serif; }
   .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 12.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
   .label-ar { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 2px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: 500; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; font-size: 12.5px; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
+  .val { border: 2px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: bold; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; font-size: 12.5px; font-weight: bold; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 12.5px; }
   tr:nth-child(even) td { background-color: #f7f7f7; }
 </style>
@@ -2159,13 +2159,13 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </tr>
     <tr>
       <td class="label-en">${d.nameLabelEn || 'Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:12px;letter-spacing:0.3px;">${d.nameEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:13px;">${d.nameAr || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:12.5px;letter-spacing:0.3px;">${d.nameEn || ''}</td>
+      <td class="val" dir="rtl" style="font-size:13.5px;">${d.nameAr || ''}</td>
       <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
     </tr>
     <tr>
       <td class="label-en">National ID / Iqama</td>
-      <td class="val" colspan="2" style="font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 13px; white-space: nowrap;">${d.nationalId || ''}</td>
+      <td class="val" colspan="2" style="font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 13.5px; font-weight: bold; white-space: nowrap;">${d.nationalId || ''}</td>
       <td class="label-ar">رقم الهوية/الاقامه</td>
     </tr>
     <tr>
@@ -2183,19 +2183,19 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <tr>
       <td class="label-en">Employer</td>
       <td class="val">${d.employerEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:12.5px;">${d.employerAr || ''}</td>
+      <td class="val" dir="rtl" style="font-size:13px;">${d.employerAr || ''}</td>
       <td class="label-ar">جهة العمل</td>
     </tr>
     <tr>
       <td class="label-en">${d.docLabelEn || 'Practitioner Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:12px;">${d.doctorEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:13px;">${d.doctorAr || ''}</td>
+      <td class="val" style="font-family:'Arial',sans-serif;font-size:12.5px;">${d.doctorEn || ''}</td>
+      <td class="val" dir="rtl" style="font-size:13.5px;">${d.doctorAr || ''}</td>
       <td class="label-ar">${d.docLabelAr || 'اسم الممارس'}</td>
     </tr>
     <tr>
       <td class="label-en">Position</td>
       <td class="val">${d.positionEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:12.5px;">${d.positionAr || ''}</td>
+      <td class="val" dir="rtl" style="font-size:13px;">${d.positionAr || ''}</td>
       <td class="label-ar">المسمى الوظيفى</td>
     </tr>
   </table>
@@ -2206,12 +2206,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <!-- Top Footer Row: QR/Text | Divider | MOH/Hospital -->
     <div style="display:flex; justify-content:center; align-items:flex-start; min-height:155px;">
       
-      <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 20px -> text starts at 100px) -->
+      <!-- Left: QR Code + Text (QR margin-top: 8px, margin-bottom: 14px -> text starts at 94px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:20px;">
-        <p style="font-size:10px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
-        <p style="font-size:8px;color:#333;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
-        <p style="font-size:9px;text-align:center;margin:0;"><a href="${shortURL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;margin-top:8px;margin-bottom:14px;">
+        <p style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
+        <p style="font-size:9px;color:#222;font-weight:bold;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
+        <p style="font-size:10px;font-weight:bold;text-align:center;margin:0;"><a href="${shortURL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
       </div>
 
       <!-- Center Vertical Divider -->
@@ -2220,8 +2220,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <!-- Right: MOH Logo (clean cropped, height: 92px, margin-bottom: 8px -> hospital name starts at 100px) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-left:25px;">
         <img src="${d.hospitalLogoBase64 || mohLogo}" style="height:92px;object-fit:contain;margin-bottom:8px;">
-        <h3 style="font-size:11px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalAr || ''}</h3>
-        <h4 style="font-size:9.5px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:210px;word-wrap:break-word;line-height:1.5;">${d.hospitalEn || ''}</h4>
+        <h3 style="font-size:13.5px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 4px 0;color:#000;text-align:center;max-width:240px;word-wrap:break-word;line-height:1.4;">${d.hospitalAr || ''}</h3>
+        <h4 style="font-size:11px;font-weight:bold;font-family:'Arial',sans-serif;margin:0 0 3px 0;color:#000;text-align:center;max-width:240px;word-wrap:break-word;line-height:1.4;">${d.hospitalEn || ''}</h4>
         ${d.licenseNumber ? `<p style="font-size:13px;font-weight:bold;color:#000;margin:0;">رقم الترخيص : ${d.licenseNumber}</p>` : ''}
       </div>
 
@@ -2231,9 +2231,9 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:6px; margin-right:-10px;">
       
       <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:11px;color:#000;">
-        <p style="margin:0 0 10px 0;">${d.time || ''}</p>
-        <p style="margin:0;">${d.dayDate || ''}</p>
+      <div style="font-weight:bold;font-size:12px;color:#000;font-family:'Arial',sans-serif;">
+        <p style="margin:0 0 15px 0;">${d.time || ''}</p>
+        <p style="margin:0;">${d.dayDate || d.date || ''}</p>
       </div>
 
       <!-- Right: NHIC Logo -->
