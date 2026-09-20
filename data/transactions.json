@@ -1,0 +1,199 @@
+[
+  {
+    "id": "tx_1789946977331_f6m6",
+    "timestamp": "2026-09-20T23:29:37.331Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789946977314 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789946928066_c4ly",
+    "timestamp": "2026-09-20T23:28:48.066Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "7771234567",
+    "operation": "report_deduction",
+    "amount": 5,
+    "previous_value": "20",
+    "new_value": "15",
+    "details": "خصم 5 نقاط لإصدار تقرير TEST_REP_1789946880843"
+  },
+  {
+    "id": "tx_1789945848649_kgo3",
+    "timestamp": "2026-09-20T23:10:48.649Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789945848637 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789945140789_imj4",
+    "timestamp": "2026-09-20T22:59:00.789Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير B82LM4 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789945125492_2z5z",
+    "timestamp": "2026-09-20T22:58:45.492Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789945125476 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789930082749_cv0ihm",
+    "timestamp": "2026-09-20T18:48:02.749Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789930082745 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789865258693_h4zbzh",
+    "timestamp": "2026-09-20T00:47:38.693Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789865258683 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789864597879_1d9wmu",
+    "timestamp": "2026-09-20T00:36:37.879Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789864597874 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789698746163_0q5bsh",
+    "timestamp": "2026-09-18T02:32:26.164Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789698746154 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789698164309_uudzv1",
+    "timestamp": "2026-09-18T02:22:44.310Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789698164304 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789693927129_u5bqdy",
+    "timestamp": "2026-09-18T01:12:07.129Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789693927123 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789691151056_orcap9",
+    "timestamp": "2026-09-18T00:25:51.056Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789691151050 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789690542620_rx5hr3",
+    "timestamp": "2026-09-18T00:15:42.620Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789690542615 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789688641383_64a29s",
+    "timestamp": "2026-09-17T23:44:01.383Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789688641379 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789685399861_h58e4a",
+    "timestamp": "2026-09-17T22:49:59.861Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789685399856 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789684978918_wtj3vu",
+    "timestamp": "2026-09-17T22:42:58.918Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789684978913 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_1789680751039_b1ifai",
+    "timestamp": "2026-09-17T21:32:31.039Z",
+    "admin_chat_id": "system",
+    "target_chat_id": "6316398194",
+    "operation": "report_created",
+    "amount": 0,
+    "previous_value": null,
+    "new_value": "unlimited",
+    "details": "إصدار تقرير CR1789680751034 (اشتراك غير محدود)"
+  },
+  {
+    "id": "tx_init_owner",
+    "timestamp": "2026-09-15T20:36:37.968Z",
+    "admin_chat_id": "6316398194",
+    "target_chat_id": "6316398194",
+    "operation": "owner_bootstrap_create",
+    "amount": 10000,
+    "new_value": "10000 points, 365 days, active, unlimited",
+    "details": "Owner account initialized with 10,000 points and 365 days active unlimited"
+  }
+]

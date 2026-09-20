@@ -372,19 +372,17 @@ const app = {
     },
 
     async loadLocalData() {
+        if (!this.state.chatId) return;
         try {
-            const res = await fetch('/subscriptions.json');
-            if (res.ok) {
-                const data = await res.json();
-                if (data.subscriptions && data.subscriptions[this.state.chatId]) {
-                    const u = data.subscriptions[this.state.chatId];
-                    this.state.points = u.points || 0;
-                    this.state.subscriptionDays = u.subscriptionDays || 0;
-                    this.state.reports = u.reports || [];
-                }
+            const raw = localStorage.getItem('cached_user_' + this.state.chatId);
+            if (raw) {
+                const cached = JSON.parse(raw);
+                this.state.points = cached.points || 0;
+                this.state.subscriptionDays = cached.subscriptionDays || 0;
+                this.updateDashboardUI();
             }
         } catch (e) {
-            console.log('No local data found or offline');
+            console.log('No cached local data found');
         }
     },
 
@@ -406,15 +404,60 @@ const app = {
 
     async syncDataWithServer() {
         if (!this.state.chatId) return;
-        const res = await fetch(`/api/user/${this.state.chatId}`);
-        if (res.ok) {
-            const data = await res.json();
-            this.state.points = data.user?.points || data.points || 0;
-            this.state.subscriptionDays = data.user?.subscriptionDays || data.subscriptionDays || 0;
-            this.state.reports = data.reports || data.user?.reports || [];
-            if (data.user?.mohLogo) this.state.mohLogoUrl = data.user.mohLogo;
-            if (data.user?.hospitalLogo) this.state.hospitalLogoUrl = data.user.hospitalLogo;
-            this.updateDashboardUI();
+        try {
+            const res = await fetch(`/api/user/${this.state.chatId}`, {
+                headers: { 'Cache-Control': 'no-cache' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const u = data.user || {};
+                this.state.points = u.points != null ? u.points : (data.points || 0);
+                this.state.subscriptionDays = u.daysRemaining != null ? u.daysRemaining : (u.subscriptionDays || 0);
+                this.state.status = u.status || 'active';
+                this.state.plan = u.plan || 'points';
+                this.state.report_payment_source = u.report_payment_source || 'points';
+                if (u.mohLogo) this.state.mohLogoUrl = u.mohLogo;
+                if (u.hospitalLogo) this.state.hospitalLogoUrl = u.hospitalLogo;
+
+                // Cache locally for offline resiliency
+                try {
+                    localStorage.setItem('cached_user_' + this.state.chatId, JSON.stringify({
+                        points: this.state.points,
+                        subscriptionDays: this.state.subscriptionDays,
+                        status: this.state.status
+                    }));
+                } catch (e) {}
+
+                // Fetch user reports from isolated API
+                try {
+                    const repRes = await fetch(`/api/user/${this.state.chatId}/reports`, {
+                        headers: { 'Cache-Control': 'no-cache' }
+                    });
+                    if (repRes.ok) {
+                        const repData = await repRes.json();
+                        if (repData.success && Array.isArray(repData.reports)) {
+                            this.state.reports = repData.reports;
+                            this.renderReports();
+                        }
+                    }
+                } catch (repErr) {
+                    console.warn('Reports fetch error:', repErr.message);
+                }
+
+                this.updateDashboardUI();
+            }
+        } catch (err) {
+            console.warn('Sync with server offline/error:', err.message);
+            // Fallback to local cache if offline
+            try {
+                const raw = localStorage.getItem('cached_user_' + this.state.chatId);
+                if (raw) {
+                    const cached = JSON.parse(raw);
+                    this.state.points = cached.points || 0;
+                    this.state.subscriptionDays = cached.subscriptionDays || 0;
+                    this.updateDashboardUI();
+                }
+            } catch (e) {}
         }
     },
 
@@ -436,33 +479,49 @@ const app = {
     },
 
     searchReports() {
-        const term = document.getElementById('report-search').value.toLowerCase();
-        const filtered = this.state.reports.filter(r => {
+        const term = (document.getElementById('report-search')?.value || '').toLowerCase().trim();
+        const list = this.state.reports || [];
+        if (!term) {
+            this.renderReports(list);
+            return;
+        }
+        const filtered = list.filter(r => {
             const data = r.data || {};
-            const name = (r.patientName || "").toLowerCase();
-            const nid = (data.national_id || "").toLowerCase();
-            return name.includes(term) || nid.includes(term);
+            const name = (r.patient_name || r.patientName || data.patient_name_ar || "").toLowerCase();
+            const nid = (r.national_id || data.national_id || "").toLowerCase();
+            const id = (r.id || r.report_id || r.service_code || "").toLowerCase();
+            return name.includes(term) || nid.includes(term) || id.includes(term);
         });
         this.renderReports(filtered);
     },
 
     renderReports(reportsToRender) {
         const reportsList = document.getElementById('reports-list');
+        if (!reportsList) return;
         reportsList.innerHTML = '';
-        if (reportsToRender.length === 0) {
-            reportsList.innerHTML = '<p style="text-align:center; color:#777; margin-top:30px;">لا توجد تقارير مطابقة</p>';
+        const list = reportsToRender || this.state.reports || [];
+        if (list.length === 0) {
+            reportsList.innerHTML = '<p style="text-align:center; color:#777; margin-top:30px;">لا توجد تقارير في سجلك حتى الآن</p>';
         } else {
-            reportsToRender.forEach(r => {
+            list.forEach(r => {
                 const card = document.createElement('div');
                 card.className = 'report-card';
+                const pName = r.patient_name || r.patientName || (r.data && (r.data.patient_name_ar || r.data.patient_name_en)) || 'مريض';
+                const repDate = r.issue_date || r.issueDate || (r.data && r.data.issue_date) || '';
+                const repId = r.id || r.report_id || r.service_code || '';
+                const shortUrl = r.inquiry_url || r.short_url || r.shortURL || '';
+                const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : 'إجازة مرضية');
+
                 card.innerHTML = `
                     <div class="report-info">
-                        <h4>${r.patientName}</h4>
-                        <p>${r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : 'إجازة مرضية')} • ${r.issueDate}</p>
+                        <h4>${pName}</h4>
+                        <p>${typeLabel} • ${repDate}</p>
+                        <span style="font-size:11px; color:#00a896; font-family:monospace; font-weight:bold;">${repId}</span>
                     </div>
-                    <div class="report-actions">
-                        <button onclick="app.copyReportId('${r.id}')" title="نسخ رقم التقرير">📋</button>
-                        <button onclick="app.editReport('${r.id}')" title="تعديل التقرير">✏️</button>
+                    <div class="report-actions" style="display:flex; gap:6px;">
+                        ${shortUrl ? `<button type="button" onclick="window.open('${shortUrl}', '_blank')" title="رابط الاستعلام" style="padding:6px 10px; font-size:13px; background:#e0f2fe; border:1px solid #7dd3fc; border-radius:6px; cursor:pointer;">🔗</button>` : ''}
+                        <button type="button" onclick="app.copyReportId('${repId}')" title="نسخ رقم التقرير" style="padding:6px 10px; font-size:13px; border-radius:6px; cursor:pointer;">📋</button>
+                        <button type="button" onclick="app.editReport('${repId}')" title="تعديل التقرير" style="padding:6px 10px; font-size:13px; border-radius:6px; cursor:pointer;">✏️</button>
                     </div>
                 `;
                 reportsList.appendChild(card);
@@ -486,7 +545,11 @@ const app = {
         selectedUser: null,
         addDurationDays: 30,
         addPlan: 'unlimited',
-        addPaySource: 'unlimited'
+        addPaySource: 'unlimited',
+        allReports: [],
+        reportsSearchQuery: '',
+        reportsFromDate: '',
+        reportsToDate: ''
     },
 
     // In-App Toast (Zero window.alert)
@@ -625,6 +688,206 @@ const app = {
             } catch (err) {
                 console.error('Error loading admin data:', err);
                 this.showToast('فشل في تحميل بيانات الإدارة: ' + err.message, 'error');
+            }
+        });
+    },
+
+    // Admin Tab Switching (Subscribers vs All Reports vs Logs)
+    switchAdminTab(tabName, btn) {
+        document.querySelectorAll('.admin-nav-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = '#f8fafc';
+            b.style.color = '#475569';
+            b.style.border = '1px solid #cbd5e1';
+        });
+        if (btn) {
+            btn.classList.add('active');
+            btn.style.background = '#00a896';
+            btn.style.color = 'white';
+            btn.style.border = 'none';
+        }
+
+        const subTab = document.getElementById('admin-subscribers-tab-content');
+        const repTab = document.getElementById('admin-reports-tab-content');
+        const logTab = document.getElementById('admin-logs-tab-content');
+
+        if (subTab) subTab.style.display = (tabName === 'subscribers') ? 'block' : 'none';
+        if (repTab) repTab.style.display = (tabName === 'reports') ? 'block' : 'none';
+        if (logTab) logTab.style.display = (tabName === 'logs') ? 'block' : 'none';
+
+        if (tabName === 'reports') {
+            this.loadAdminReports();
+        } else if (tabName === 'logs') {
+            this.loadAdminLogs();
+        }
+    },
+
+    // Admin All Reports Module (Rule 19, 20, 21)
+    async loadAdminReports(btn) {
+        const listEl = document.getElementById('admin-all-reports-list');
+        if (listEl && (!this.adminState.allReports || this.adminState.allReports.length === 0)) {
+            listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">⏳ جاري تحميل سجل التقارير...</div>';
+        }
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const headers = this.getAdminHeaders();
+                const q = this.adminState.reportsSearchQuery || '';
+                const fromDate = this.adminState.reportsFromDate || '';
+                const toDate = this.adminState.reportsToDate || '';
+
+                const url = new URL('/api/admin/reports', window.location.origin);
+                if (q) url.searchParams.set('search', q);
+                if (fromDate) url.searchParams.set('fromDate', fromDate);
+                if (toDate) url.searchParams.set('toDate', toDate);
+
+                const res = await fetch(url.toString(), { headers });
+                if (res.status === 401) {
+                    this.showToast('غير مصرح لك (تحتاج صلاحية المشرف)', 'error');
+                    this.promptAdminLogin();
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success && Array.isArray(data.reports)) {
+                    this.adminState.allReports = data.reports;
+                    this.adminState.totalReportsCount = data.total || data.reports.length;
+                    this.renderAdminAllReports();
+                } else {
+                    this.showToast('فشل في جلب التقارير: ' + (data.error || 'خطأ غير معروف'), 'error');
+                }
+            } catch (err) {
+                console.error('Error loading admin reports:', err);
+                this.showToast('فشل في تحميل التقارير: ' + err.message, 'error');
+            }
+        });
+    },
+
+    renderAdminAllReports() {
+        const listEl = document.getElementById('admin-all-reports-list');
+        const countEl = document.getElementById('admin-reports-count-indicator');
+        if (!listEl) return;
+
+        const reports = this.adminState.allReports || [];
+        if (countEl) {
+            countEl.innerText = `إجمالي التقارير المعروضة: ${reports.length} تقرير`;
+        }
+
+        if (reports.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:35px; color:#94a3b8; font-weight:600;">لا توجد تقارير مطابقة</div>';
+            return;
+        }
+
+        let html = '';
+        for (const r of reports) {
+            const repId = r.id || r.report_id || r.service_code || '';
+            const pName = r.patient_name || r.patientName || (r.data && (r.data.patient_name_ar || r.data.patient_name_en)) || 'غير محدد';
+            const nid = r.national_id || (r.data && r.data.national_id) || '-';
+            const date = r.issue_date || r.issueDate || (r.data && r.data.issue_date) || '-';
+            const time = r.issue_time || (r.data && r.data.issue_time) || '';
+            const shortUrl = r.inquiry_url || r.short_url || r.shortURL || '';
+            const userLabel = r.username ? `@${r.username}` : (r.chat_id ? `ID: ${r.chat_id}` : '-');
+            const isPoints = (r.payment_type === 'points' || r.points_deducted > 0);
+            const payBadge = isPoints ? '<span class="badge badge-points">🪙 5 نقاط</span>' : '<span class="badge badge-unlimited">♾️ غير محدود</span>';
+            const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة' : 'إجازة مرضية');
+
+            html += `
+            <div class="admin-subscriber-card" style="margin-bottom:12px; border-left:4px solid #00a896;">
+                <div class="sub-card-header">
+                    <div>
+                        <div class="sub-card-name" style="font-size:15px; font-weight:bold;">
+                            ${pName}
+                            <span style="font-size:12px; font-weight:normal; color:#64748b;">(هوية: ${nid})</span>
+                        </div>
+                        <div class="sub-card-cid" style="margin-top:2px;">
+                            <span style="color:#00a896; font-family:monospace; font-weight:bold;">${repId}</span>
+                            • بواسطة: <strong style="color:#334155;">${userLabel}</strong>
+                        </div>
+                    </div>
+                    <div>${payBadge}</div>
+                </div>
+
+                <div style="font-size:12px; color:#64748b; margin:6px 0;">
+                    📅 الإصدار: <strong>${date} ${time}</strong> • النوع: <strong>${typeLabel}</strong>
+                </div>
+
+                <div class="sub-card-actions" style="display:flex; gap:8px; margin-top:8px;">
+                    ${shortUrl ? `<a href="${shortUrl}" target="_blank" style="flex:1; text-align:center; padding:7px 10px; background:#e0f2fe; color:#0369a1; border-radius:6px; font-size:12px; font-weight:bold; text-decoration:none;">🔗 فتح الاستعلام</a>` : ''}
+                    <button type="button" onclick="app.copyReportId('${repId}')" class="btn-sub-action" style="flex:1; padding:7px 10px; font-size:12px;">📋 نسخ الرمز</button>
+                    ${shortUrl ? `<button type="button" onclick="navigator.clipboard.writeText('${shortUrl}').then(()=>app.showToast('تم نسخ رابط التقرير'))" class="btn-sub-action" style="flex:1; padding:7px 10px; font-size:12px;">📎 نسخ الرابط</button>` : ''}
+                </div>
+            </div>`;
+        }
+        listEl.innerHTML = html;
+    },
+
+    handleAdminReportsSearch(val) {
+        this.adminState.reportsSearchQuery = val;
+        clearTimeout(this._reportsSearchTimer);
+        this._reportsSearchTimer = setTimeout(() => {
+            this.loadAdminReports();
+        }, 300);
+    },
+
+    handleAdminReportsFilterChange() {
+        const fromInput = document.getElementById('admin-reports-from-date');
+        const toInput = document.getElementById('admin-reports-to-date');
+        this.adminState.reportsFromDate = fromInput ? fromInput.value : '';
+        this.adminState.reportsToDate = toInput ? toInput.value : '';
+        this.loadAdminReports();
+    },
+
+    resetAdminReportsFilters() {
+        const fromInput = document.getElementById('admin-reports-from-date');
+        const toInput = document.getElementById('admin-reports-to-date');
+        const searchInput = document.getElementById('admin-reports-search-input');
+        if (fromInput) fromInput.value = '';
+        if (toInput) toInput.value = '';
+        if (searchInput) searchInput.value = '';
+        this.adminState.reportsFromDate = '';
+        this.adminState.reportsToDate = '';
+        this.adminState.reportsSearchQuery = '';
+        this.loadAdminReports();
+    },
+
+    async loadAdminLogs(btn) {
+        const listEl = document.getElementById('admin-system-logs-list');
+        if (!listEl) return;
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">⏳ جاري تحميل سجل العمليات...</div>';
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const headers = this.getAdminHeaders();
+                const res = await fetch('/api/admin/logs', { headers });
+                if (res.status === 401) {
+                    this.showToast('غير مصرح لك (تحتاج صلاحية المشرف)', 'error');
+                    this.promptAdminLogin();
+                    return;
+                }
+                const data = await res.json();
+                const logs = data.logs || (data.success && data.transactions) || [];
+                if (logs.length === 0) {
+                    listEl.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">لا توجد عمليات مسجلة</div>';
+                    return;
+                }
+                let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+                for (const l of logs) {
+                    const time = l.timestamp ? new Date(l.timestamp).toLocaleString('ar-SA') : '';
+                    const op = l.operation || l.type || 'عملية';
+                    html += `
+                    <div style="padding:10px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0; font-size:12px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <strong style="color:#0f172a;">${op}</strong>
+                            <span style="color:#64748b; font-size:11px;">${time}</span>
+                        </div>
+                        <div style="color:#334155;">${l.details || l.message || ''}</div>
+                        ${l.target_chat_id ? `<div style="font-size:11px; color:#64748b; margin-top:2px;">المشترك: ${l.target_chat_id}</div>` : ''}
+                    </div>`;
+                }
+                html += '</div>';
+                listEl.innerHTML = html;
+            } catch (err) {
+                listEl.innerHTML = `<div style="color:#ef4444; padding:20px; text-align:center;">خطأ في تحميل السجل: ${err.message}</div>`;
             }
         });
     },
@@ -1459,22 +1722,39 @@ const app = {
         return ` ${days[d.getDay()]} ,${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
     },
 
-    async submitForm() {
+    async submitForm(btn) {
+        if (this._submittingForm) return;
+
         // Final Validation
-        if(!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
+        if (!this.state.currentReportId && this.state.points < 5 && this.state.subscriptionDays <= 0) {
             this.showToast("ليس لديك رصيد. تحتاج 5 نقاط لإصدار تقرير جديد.", "error");
             return;
         }
 
+        const submitBtn = btn || document.getElementById('btn-submit-report');
+        this._submittingForm = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.dataset.origText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ جاري الإصدار...';
+        }
+
         // Show loading
-        document.getElementById('loading-overlay').style.display = 'flex';
+        const loadingEl = document.getElementById('loading-overlay');
+        if (loadingEl) loadingEl.style.display = 'flex';
         
         try {
             await this.populatePdfAndGenerate();
         } catch(e) {
             console.error(e);
             this.showToast("حدث خطأ أثناء إعداد التقرير: " + (e.message || e), "error");
-            document.getElementById('loading-overlay').style.display = 'none';
+        } finally {
+            this._submittingForm = false;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = submitBtn.dataset.origText || 'إصدار التقرير';
+            }
+            if (loadingEl) loadingEl.style.display = 'none';
         }
     },
 
@@ -1509,8 +1789,6 @@ const app = {
         const yy = dateObj.getFullYear().toString().slice(2);
         const mm = (dateObj.getMonth() + 1).toString().padStart(2, '0');
         const dd = dateObj.getDate().toString().padStart(2, '0');
-        // Generate a fundamentally sequential ID (based on time) but protected by an Affine Cipher algorithm
-        // This ensures chronological uniqueness while preventing +1 guessing.
         const seqId = Math.floor(Date.now() / 1000) % 100000;
         const obfuscatedId = (47313 * seqId + 15923) % 100000;
         const rand5 = obfuscatedId.toString().padStart(5, '0');
@@ -1582,10 +1860,7 @@ const app = {
         };
 
         try {
-            if (!app.state.currentReportId && app.state.subscriptionDays <= 0) { app.state.points -= 5; }
-            app.updateDashboardUI();
-
-            // SERVER-SIDE GENERATION
+            // SERVER-SIDE ATOMIC GENERATION & STORAGE (Rule 1 & Rule 14)
             const res = await fetch('/api/generate-native-pdf', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1602,45 +1877,17 @@ const app = {
                 throw new Error(data.error || 'فشل توليد التقرير');
             }
 
-            // Also save report data
-            await fetch(`/api/report/${app.state.chatId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    report: {
-                        id: reportId,
-                        patientName: isCompanionType ? escAr : pNameAr,
-                        type: type,
-                        issueDate: issueDate,
-                        data: {
-                            admission_date: admission,
-                            discharge_date: discharge,
-                            duration: duration,
-                            issue_date: issueDate,
-                            issue_time: issueTime,
-                            national_id: idNum,
-                            patient_name_ar: pNameAr,
-                            patient_name_en: pNameEn,
-                            nationality: document.getElementById('nationality').value,
-                            employer: employer,
-                            escort_name_ar: escAr,
-                            escort_name_en: escEn,
-                            relation_ar: relAr,
-                            relation_en: relEn,
-                            doctor_name_ar: docNameAr,
-                            doctor_name_en: docNameEn,
-                            job_title_ar: jobAr,
-                            job_title_en: jobEn,
-                            hospital_ar: hospAr,
-                            hospital_en: hospEn,
-                            hospital_type: isPrivate ? 'private' : 'gov',
-                            license_number: license
-                        }
-                    }
-                })
-            });
+            // Sync updated points & days from server response
+            if (data.points != null) app.state.points = data.points;
+            if (data.daysRemaining != null) app.state.subscriptionDays = data.daysRemaining;
+            
+            if (data.report) {
+                app.state.reports = [data.report, ...app.state.reports.filter(r => r.id !== reportId)];
+            }
 
-            document.getElementById('loading-overlay').style.display = 'none';
+            app.updateDashboardUI();
+            app.renderReports();
+
             document.getElementById('report-form').reset();
             app.navigate('success');
 
@@ -1648,7 +1895,6 @@ const app = {
             console.error("PDF Generation error: ", e);
             fetch('/api/logs?msg=' + encodeURIComponent('Client_Error: ' + e.message));
             this.showToast("حدث خطأ أثناء إصدار التقرير: " + e.message, "error");
-            document.getElementById('loading-overlay').style.display = 'none';
         }
     },
 
@@ -1664,5 +1910,19 @@ const app = {
 
 window.onload = () => {
     app.init();
+
+    // Offline / Online Status Listeners (Rule 32)
+    window.addEventListener('offline', () => {
+        const banner = document.getElementById('offline-banner');
+        if (banner) banner.style.display = 'block';
+    });
+    window.addEventListener('online', () => {
+        const banner = document.getElementById('offline-banner');
+        if (banner) banner.style.display = 'none';
+        app.syncDataWithServer();
+        if (document.getElementById('admin-screen')?.classList.contains('active')) {
+            app.loadAdminData();
+        }
+    });
 };
 
