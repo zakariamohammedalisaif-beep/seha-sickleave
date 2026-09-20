@@ -2098,18 +2098,18 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
-  .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 2px solid #cccccc; }
+  .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 1.3px solid #cccccc; }
   tr { height: 40px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; }
-  .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; }
-  .label-ar { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; }
-  .val-en { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #111827; }
-  .val-en-name { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #111827; }
-  .val-ar { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #111827; }
-  .val-date { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #111827; }
-  .val-id { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.5px; color: #111827; white-space: nowrap; }
-  .val-nid { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.8px; color: #111827; white-space: nowrap; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
+  .label-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; }
+  .label-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; }
+  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #111827; }
+  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #111827; }
+  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #111827; }
+  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #111827; }
+  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.5px; color: #111827; white-space: nowrap; }
+  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.8px; color: #111827; white-space: nowrap; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.3px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 13px; }
   tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }
 </style>

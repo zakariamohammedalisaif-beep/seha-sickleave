@@ -43,13 +43,24 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-20T00:47:38.694Z",
+      "updatedAt": "2026-09-20T18:48:02.750Z",
       "daysRemaining": 363,
       "daysUsed": 5,
       "reportsCount": 1
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789930082749_cv0ihm",
+      "timestamp": "2026-09-20T18:48:02.749Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789930082745 (اشتراك غير محدود)"
+    },
     {
       "id": "tx_1789865258693_h4zbzh",
       "timestamp": "2026-09-20T00:47:38.693Z",
