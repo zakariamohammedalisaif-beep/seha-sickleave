@@ -7,7 +7,6 @@
  */
 
 const API_BASE_URL = 'https://api.short.io';
-const DEFAULT_DOMAIN = 'sehaedu.s.gy';
 const DEFAULT_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 2;
 
@@ -18,10 +17,19 @@ class ShortIoService {
     }
 
     /**
-     * Get configured domain from environment or fallback to default
+     * Get configured domain from environment or project URL
      */
     getDomain() {
-        return (process.env.SHORTIO_DOMAIN || DEFAULT_DOMAIN).trim().toLowerCase();
+        const configured = (process.env.SHORTIO_DOMAIN || '').trim().toLowerCase();
+        if (configured && !configured.includes('sehaedu.s.gy')) {
+            return configured;
+        }
+        const webAppUrl = (process.env.WEB_APP_URL || process.env.RENDER_EXTERNAL_URL || 'https://seha-sickleave-app.onrender.com').replace(/\/+$/, '');
+        try {
+            return new URL(webAppUrl).host;
+        } catch (e) {
+            return 'seha-sickleave-app.onrender.com';
+        }
     }
 
     /**
@@ -45,11 +53,12 @@ class ShortIoService {
     }
 
     /**
-     * Check if Short.io API key is configured
+     * Check if Short.io API key is configured with a valid custom domain
      */
     isConfigured() {
         const key = this.getApiKey();
-        return Boolean(key && key.length > 0 && !key.includes('<'));
+        const customDomain = (process.env.SHORTIO_DOMAIN || '').trim().toLowerCase();
+        return Boolean(key && key.length > 0 && !key.includes('<') && customDomain && !customDomain.includes('sehaedu.s.gy'));
     }
 
     /**
@@ -75,12 +84,16 @@ class ShortIoService {
     }
 
     /**
-     * Construct canonical fallback short URL
+     * Construct project short URL (or custom domain if configured)
      */
     buildFallbackUrl(path) {
-        const domain = this.getDomain();
         const sanitized = this.sanitizePath(path);
-        return `https://${domain}/${sanitized}`;
+        const configuredDomain = (process.env.SHORTIO_DOMAIN || '').trim().toLowerCase();
+        if (configuredDomain && !configuredDomain.includes('sehaedu.s.gy')) {
+            return `https://${configuredDomain}/${sanitized}`;
+        }
+        const webAppUrl = (process.env.WEB_APP_URL || process.env.RENDER_EXTERNAL_URL || 'https://seha-sickleave-app.onrender.com').replace(/\/+$/, '');
+        return `${webAppUrl}/${sanitized}`;
     }
 
     /**

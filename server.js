@@ -13,10 +13,10 @@ let currentAdminToken = null;
 // Configuration
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
 const PORT = process.env.PORT || 3000;
-const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave.onrender.com';
+const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave-app.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=51';
-// Target URL for PDF QR code & clickable link (matches target project https://seha-sa.s.gy)
-const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || 'https://seha-sa.s.gy/inquiries';
+// Target URL for PDF QR code & inquiry links
+const INQUIRY_URL = `${WEB_APP_URL}/inquiries/slenquiry`;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
@@ -1866,18 +1866,22 @@ app.post('/api/report/:chatId', async (req, res) => {
                 }
             }
             
-            // Ensure Short.io shortURL is generated and attached
+            // Ensure Short.io shortURL is generated and attached (never competitor domain)
             const leaveId = shortIoService.sanitizePath(reportData.id || (reportData.data && (reportData.data.leaveId || reportData.data.service_code)));
             if (leaveId) {
-                if (!reportData.shortURL) {
+                if (!reportData.shortURL || reportData.shortURL.includes('sehaedu.s.gy')) {
                     try {
                         const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(leaveId)}`;
-                        const shortRes = await shortIoService.createShortLink({
-                            originalURL: originalInquiryUrl,
-                            path: leaveId,
-                            allowDuplicates: false
-                        });
-                        reportData.shortURL = shortRes.shortURL;
+                        if (shortIoService.isConfigured()) {
+                            const shortRes = await shortIoService.createShortLink({
+                                originalURL: originalInquiryUrl,
+                                path: leaveId,
+                                allowDuplicates: false
+                            });
+                            reportData.shortURL = shortRes.shortURL;
+                        } else {
+                            reportData.shortURL = shortIoService.buildFallbackUrl(leaveId);
+                        }
                     } catch (e) {
                         reportData.shortURL = shortIoService.buildFallbackUrl(leaveId);
                     }
@@ -1885,7 +1889,7 @@ app.post('/api/report/:chatId', async (req, res) => {
                 if (reportData.data) {
                     reportData.data.leaveId = reportData.data.leaveId || leaveId;
                     reportData.data.service_code = reportData.data.service_code || leaveId;
-                    reportData.data.short_url = reportData.data.short_url || reportData.shortURL;
+                    reportData.data.short_url = reportData.shortURL;
                 }
             }
 
@@ -2060,16 +2064,23 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // 2. Prepare educational inquiry original URL for this record
         const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(sanitizedLeaveId)}`;
 
-        // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback)
+        // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback to project URL)
         let shortURL = d.shortURL || d.short_url;
+        if (shortURL && shortURL.includes('sehaedu.s.gy')) {
+            shortURL = null;
+        }
         if (!shortURL) {
             try {
-                const shortResult = await shortIoService.createShortLink({
-                    originalURL: originalInquiryUrl,
-                    path: sanitizedLeaveId,
-                    allowDuplicates: false
-                });
-                shortURL = shortResult.shortURL;
+                if (shortIoService.isConfigured()) {
+                    const shortResult = await shortIoService.createShortLink({
+                        originalURL: originalInquiryUrl,
+                        path: sanitizedLeaveId,
+                        allowDuplicates: false
+                    });
+                    shortURL = shortResult.shortURL;
+                } else {
+                    shortURL = shortIoService.buildFallbackUrl(sanitizedLeaveId);
+                }
             } catch (shortErr) {
                 console.error('[ShortIoService] Error creating short link:', shortErr.message);
                 shortURL = shortIoService.buildFallbackUrl(sanitizedLeaveId);
@@ -2092,21 +2103,26 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 </head>
 <body>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: #fff !important; }
   body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
   @page { size: 794px 1123px; margin: 0; }
-  table { border-spacing: 0; direction: ltr; border-collapse: collapse; }
+  table { border-spacing: 0; direction: ltr; border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
   .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 2px solid #cccccc; }
   tr { height: 40px; }
-  td { font-family: 'Tajawal', 'Arial', sans-serif; }
-  .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; text-align: center !important; vertical-align: middle !important; }
-  .label-ar { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; text-align: center !important; vertical-align: middle !important; }
-  .val { border: 2px solid #cccccc; padding: 5px 6px; color: #0d2847; font-weight: bold; font-size: 13px; text-align: center !important; vertical-align: middle !important; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; font-size: 12.8px; font-weight: bold; text-align: center !important; vertical-align: middle !important; white-space: nowrap; }
+  td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; }
+  .label-en { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; }
+  .label-ar { border: 2px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; }
+  .val-en { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #111827; }
+  .val-en-name { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #111827; }
+  .val-ar { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #111827; }
+  .val-date { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #111827; }
+  .val-id { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.5px; color: #111827; white-space: nowrap; }
+  .val-nid { border: 2px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.8px; color: #111827; white-space: nowrap; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 2px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 13px; }
-  tr:nth-child(even) td { background-color: #f7f7f7; }
+  tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }
 </style>
 <div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
   
@@ -2133,71 +2149,71 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;">
     <tr>
       <td class="label-en" style="width:150px;">Leave ID</td>
-      <td class="val" colspan="2" style="width:424px; font-family: 'Arial', sans-serif; font-weight: bold; font-size: 13.5px; letter-spacing: 0.5px; white-space: nowrap;">${d.leaveId || ''}</td>
+      <td class="val-id" colspan="2" style="width:424px;">${d.leaveId || ''}</td>
       <td class="label-ar" style="width:150px;">رمز الإجازة</td>
     </tr>
     <tr class="dur-row">
       <td class="dur-label" style="width:150px;">Leave Duration</td>
-      <td style="width:212px; white-space: nowrap; font-size: 11.8px; font-weight: normal;">${d.durationEn || ''}</td>
-      <td dir="rtl" style="width:212px; white-space: nowrap;">${formattedDurationAr}</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:11.8px; font-weight:normal;">${d.durationEn || ''}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${formattedDurationAr}</td>
       <td class="dur-label" style="width:150px;">مدة الإجازة</td>
     </tr>
     <tr>
       <td class="label-en">Admission Date</td>
-      <td class="val">${d.admissionG || ''}</td>
-      <td class="val">${d.admissionH || ''}</td>
+      <td class="val-date">${d.admissionG || ''}</td>
+      <td class="val-date">${d.admissionH || ''}</td>
       <td class="label-ar">تاريخ الدخول</td>
     </tr>
     <tr>
       <td class="label-en">Discharge Date</td>
-      <td class="val">${d.dischargeG || ''}</td>
-      <td class="val">${d.dischargeH || ''}</td>
+      <td class="val-date">${d.dischargeG || ''}</td>
+      <td class="val-date">${d.dischargeH || ''}</td>
       <td class="label-ar">تاريخ الخروج</td>
     </tr>
     <tr>
       <td class="label-en">Issue Date</td>
-      <td class="val" colspan="2">${d.issueDate || ''}</td>
+      <td class="val-date" colspan="2">${d.issueDate || ''}</td>
       <td class="label-ar">تاريخ إصدار التقرير</td>
     </tr>
     <tr>
       <td class="label-en">${d.nameLabelEn || 'Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:11.8px;font-weight:normal;letter-spacing:0.2px;text-transform:uppercase;">${d.nameEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:13.5px;">${d.nameAr || ''}</td>
+      <td class="val-en-name">${d.nameEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.nameAr || ''}</td>
       <td class="label-ar">${d.nameLabelAr || 'الاسم'}</td>
     </tr>
     <tr>
       <td class="label-en">National ID / Iqama</td>
-      <td class="val" colspan="2" style="font-family: 'Arial', sans-serif; letter-spacing: 1px; font-size: 13.5px; font-weight: bold; white-space: nowrap;">${d.nationalId || ''}</td>
+      <td class="val-nid" colspan="2">${d.nationalId || ''}</td>
       <td class="label-ar">رقم الهوية/الاقامه</td>
     </tr>
     <tr>
       <td class="label-en">Nationality</td>
-      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.nationalityEn || 'Saudi Arabia'}</td>
-      <td class="val" dir="rtl">${d.nationalityAr || 'السعودية'}</td>
+      <td class="val-en">${d.nationalityEn || 'Saudi Arabia'}</td>
+      <td class="val-ar" dir="rtl">${d.nationalityAr || 'السعودية'}</td>
       <td class="label-ar">الجنسية</td>
     </tr>
     ${(d.relationEn || d.relationAr) ? `<tr>
       <td class="label-en">Relation</td>
-      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.relationEn || ''}</td>
-      <td class="val" dir="rtl">${d.relationAr || ''}</td>
+      <td class="val-en">${d.relationEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.relationAr || ''}</td>
       <td class="label-ar">صلة القرابة</td>
     </tr>` : ''}
     <tr>
       <td class="label-en">Employer</td>
-      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.employerEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:13px;">${d.employerAr || ''}</td>
+      <td class="val-en">${d.employerEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.employerAr || ''}</td>
       <td class="label-ar">جهة العمل</td>
     </tr>
     <tr>
       <td class="label-en">${d.docLabelEn || 'Practitioner Name'}</td>
-      <td class="val" style="font-family:'Arial',sans-serif;font-size:11.8px;font-weight:normal;letter-spacing:0.2px;text-transform:uppercase;">${d.doctorEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:13.5px;">${d.doctorAr || ''}</td>
+      <td class="val-en-name">${d.doctorEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.doctorAr || ''}</td>
       <td class="label-ar">${d.docLabelAr || 'اسم الممارس'}</td>
     </tr>
     <tr>
       <td class="label-en">Position</td>
-      <td class="val" style="font-size:11.8px;font-weight:normal;">${d.positionEn || ''}</td>
-      <td class="val" dir="rtl" style="font-size:13px;">${d.positionAr || ''}</td>
+      <td class="val-en">${d.positionEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.positionAr || ''}</td>
       <td class="label-ar">المسمى الوظيفى</td>
     </tr>
   </table>

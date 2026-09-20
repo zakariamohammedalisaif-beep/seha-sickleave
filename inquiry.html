@@ -868,17 +868,47 @@
             handleNewInquiry();
         }
 
-        // On Page Load: Keep inputs empty for manual entry by user
+        // On Page Load: Check URL query parameters or hash parameters
         document.addEventListener('DOMContentLoaded', () => {
+            const url = new URL(window.location.href);
+            let id = url.searchParams.get('id') || url.searchParams.get('serviceCode') || url.searchParams.get('leaveId') || '';
+            let nin = url.searchParams.get('nin') || url.searchParams.get('nid') || url.searchParams.get('nationalId') || '';
+
+            // If not found in query string, check URL hash (e.g. #/inquiries/slenquiry?id=...&nin=...)
+            if ((!id || !nin) && window.location.hash) {
+                const hashPart = window.location.hash;
+                const qIdx = hashPart.indexOf('?');
+                if (qIdx !== -1) {
+                    const hashParams = new URLSearchParams(hashPart.substring(qIdx));
+                    id = id || hashParams.get('id') || hashParams.get('serviceCode') || hashParams.get('leaveId') || '';
+                    nin = nin || hashParams.get('nin') || hashParams.get('nid') || hashParams.get('nationalId') || '';
+                }
+            }
+
             const sCode = document.getElementById('serviceCode');
             const nId = document.getElementById('nationalId');
             if (sCode) {
-                sCode.value = '';
+                if (id) {
+                    sCode.value = id.trim();
+                } else {
+                    sCode.value = '';
+                }
                 sCode.disabled = false;
             }
             if (nId) {
-                nId.value = '';
+                if (nin) {
+                    nId.value = nin.trim();
+                } else {
+                    nId.value = '';
+                }
                 nId.disabled = false;
+            }
+
+            // If both ID and NIN are present in URL (e.g. from QR scan), auto-inquire
+            if (id && nin) {
+                handleInquiry();
+            } else if (id && nId) {
+                nId.focus();
             }
         });
     </script>

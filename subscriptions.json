@@ -8,7 +8,7 @@
       "report_payment_source": "unlimited",
       "points": 10000,
       "balance_points": 10000,
-      "subscriptionDays": 364,
+      "subscriptionDays": 363,
       "subscription_start_date": "2026-09-15T00:00:00.000Z",
       "subscription_end_date": "2027-09-17T23:59:59.999Z",
       "reports": [
@@ -17,11 +17,11 @@
           "patientName": "ريان أحمد الغامدي",
           "type": "sick",
           "issueDate": "2026-09-15",
-          "shortURL": "https://sehaedu.s.gy/GSL26091549804",
+          "shortURL": "https://seha-sickleave-app.onrender.com/GSL26091549804",
           "data": {
             "leaveId": "GSL26091549804",
             "service_code": "GSL26091549804",
-            "short_url": "https://sehaedu.s.gy/GSL26091549804",
+            "short_url": "https://seha-sickleave-app.onrender.com/GSL26091549804",
             "admission_date": "2026-09-15",
             "discharge_date": "2026-09-15",
             "duration": "1",
@@ -43,13 +43,24 @@
       "referredBy": null,
       "referralsCount": 0,
       "referralPoints": 0,
-      "updatedAt": "2026-09-19T15:58:46.463Z",
-      "daysRemaining": 364,
-      "daysUsed": 4,
+      "updatedAt": "2026-09-20T00:36:37.880Z",
+      "daysRemaining": 363,
+      "daysUsed": 5,
       "reportsCount": 1
     }
   },
   "transactions": [
+    {
+      "id": "tx_1789864597879_1d9wmu",
+      "timestamp": "2026-09-20T00:36:37.879Z",
+      "admin_chat_id": "system",
+      "target_chat_id": "6316398194",
+      "operation": "report_created",
+      "amount": 0,
+      "previous_value": null,
+      "new_value": "unlimited",
+      "details": "إصدار تقرير CR1789864597874 (اشتراك غير محدود)"
+    },
     {
       "id": "tx_1789698746163_0q5bsh",
       "timestamp": "2026-09-18T02:32:26.164Z",
