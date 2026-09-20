@@ -15,8 +15,8 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave-app.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=51';
-// Target URL for PDF QR code & inquiry links
-const INQUIRY_URL = `${WEB_APP_URL}/inquiries/slenquiry`;
+// Target URL for PDF QR code & clickable link (matches target project https://seha-sa.s.gy)
+const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || 'https://seha-sa.s.gy/inquiries';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
@@ -1866,22 +1866,18 @@ app.post('/api/report/:chatId', async (req, res) => {
                 }
             }
             
-            // Ensure Short.io shortURL is generated and attached (never competitor domain)
+            // Ensure Short.io shortURL is generated and attached
             const leaveId = shortIoService.sanitizePath(reportData.id || (reportData.data && (reportData.data.leaveId || reportData.data.service_code)));
             if (leaveId) {
-                if (!reportData.shortURL || reportData.shortURL.includes('sehaedu.s.gy')) {
+                if (!reportData.shortURL) {
                     try {
                         const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(leaveId)}`;
-                        if (shortIoService.isConfigured()) {
-                            const shortRes = await shortIoService.createShortLink({
-                                originalURL: originalInquiryUrl,
-                                path: leaveId,
-                                allowDuplicates: false
-                            });
-                            reportData.shortURL = shortRes.shortURL;
-                        } else {
-                            reportData.shortURL = shortIoService.buildFallbackUrl(leaveId);
-                        }
+                        const shortRes = await shortIoService.createShortLink({
+                            originalURL: originalInquiryUrl,
+                            path: leaveId,
+                            allowDuplicates: false
+                        });
+                        reportData.shortURL = shortRes.shortURL;
                     } catch (e) {
                         reportData.shortURL = shortIoService.buildFallbackUrl(leaveId);
                     }
@@ -1889,7 +1885,7 @@ app.post('/api/report/:chatId', async (req, res) => {
                 if (reportData.data) {
                     reportData.data.leaveId = reportData.data.leaveId || leaveId;
                     reportData.data.service_code = reportData.data.service_code || leaveId;
-                    reportData.data.short_url = reportData.shortURL;
+                    reportData.data.short_url = reportData.data.short_url || reportData.shortURL;
                 }
             }
 
@@ -2064,23 +2060,16 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         // 2. Prepare educational inquiry original URL for this record
         const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(sanitizedLeaveId)}`;
 
-        // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback to project URL)
+        // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback)
         let shortURL = d.shortURL || d.short_url;
-        if (shortURL && shortURL.includes('sehaedu.s.gy')) {
-            shortURL = null;
-        }
         if (!shortURL) {
             try {
-                if (shortIoService.isConfigured()) {
-                    const shortResult = await shortIoService.createShortLink({
-                        originalURL: originalInquiryUrl,
-                        path: sanitizedLeaveId,
-                        allowDuplicates: false
-                    });
-                    shortURL = shortResult.shortURL;
-                } else {
-                    shortURL = shortIoService.buildFallbackUrl(sanitizedLeaveId);
-                }
+                const shortResult = await shortIoService.createShortLink({
+                    originalURL: originalInquiryUrl,
+                    path: sanitizedLeaveId,
+                    allowDuplicates: false
+                });
+                shortURL = shortResult.shortURL;
             } catch (shortErr) {
                 console.error('[ShortIoService] Error creating short link:', shortErr.message);
                 shortURL = shortIoService.buildFallbackUrl(sanitizedLeaveId);

@@ -31,8 +31,8 @@ async function runTests() {
     console.log('--- TEST GROUP 1: DOMAIN & ENVIRONMENT CONFIGURATION ---');
     try {
         const domain = shortIoService.getDomain();
-        assert.strictEqual(domain, 'localhost:3096', 'Domain must be derived from WEB_APP_URL when no custom domain');
-        pass('Default domain correctly derived from WEB_APP_URL: localhost:3096');
+        assert.strictEqual(domain, 'sehaedu.s.gy', 'Domain must be exactly sehaedu.s.gy');
+        pass('Default domain is strictly sehaedu.s.gy');
     } catch (e) { fail('Default domain check', e); }
 
     try {
@@ -73,14 +73,14 @@ async function runTests() {
 
     try {
         const fallbackUrl = shortIoService.buildFallbackUrl('B82LM4');
-        assert.strictEqual(fallbackUrl, 'http://localhost:3096/B82LM4');
-        pass('Constructed Short URL strictly matches project URL: http://localhost:3096/B82LM4');
+        assert.strictEqual(fallbackUrl, 'https://sehaedu.s.gy/B82LM4');
+        pass('Constructed Short URL strictly matches format: https://sehaedu.s.gy/B82LM4');
     } catch (e) { fail('Fallback URL format check', e); }
 
     // GROUP 3: LINK CREATION & IN-MEMORY CACHE
     console.log('\n--- TEST GROUP 3: LINK CREATION & CACHE ---');
     try {
-        const targetUrl = 'http://localhost:3096/inquiries/slenquiry?id=B82LM4';
+        const targetUrl = 'https://seha-sickleave-1.onrender.com/inquiries/slenquiry?id=B82LM4';
         const res1 = await shortIoService.createShortLink({
             originalURL: targetUrl,
             path: 'B82LM4',
@@ -88,10 +88,10 @@ async function runTests() {
         });
 
         assert.strictEqual(res1.success, true);
-        assert.strictEqual(res1.shortURL, 'http://localhost:3096/B82LM4');
-        assert.strictEqual(res1.domain, 'localhost:3096');
+        assert.strictEqual(res1.shortURL, 'https://sehaedu.s.gy/B82LM4');
+        assert.strictEqual(res1.domain, 'sehaedu.s.gy');
         assert.strictEqual(res1.path, 'B82LM4');
-        pass('createShortLink returns valid project shortURL for B82LM4');
+        pass('createShortLink returns valid shortURL for B82LM4');
 
         const res2 = await shortIoService.createShortLink({
             originalURL: targetUrl,
@@ -100,7 +100,7 @@ async function runTests() {
         });
 
         assert.strictEqual(res2.success, true);
-        assert.strictEqual(res2.shortURL, 'http://localhost:3096/B82LM4');
+        assert.strictEqual(res2.shortURL, 'https://sehaedu.s.gy/B82LM4');
         assert.strictEqual(res2.fromCache, true);
         pass('Duplicate call served from in-memory cache (prevents redundant API calls)');
     } catch (e) { fail('Link creation and cache check', e); }
@@ -210,8 +210,8 @@ async function runTests() {
 
         assert.strictEqual(pdfReq.status, 200);
         assert.strictEqual(pdfReq.body.success, true);
-        assert.strictEqual(pdfReq.body.shortURL, 'http://localhost:3096/B82LM4');
-        pass('PDF generation succeeded with shortURL: http://localhost:3096/B82LM4');
+        assert.strictEqual(pdfReq.body.shortURL, 'https://sehaedu.s.gy/B82LM4');
+        pass('PDF generation succeeded with shortURL: https://sehaedu.s.gy/B82LM4');
     } catch (e) { fail('PDF generation with Short.io check', e); }
 
     // GROUP 6: DATABASE PERSISTENCE & INQUIRY VERIFICATION
@@ -224,8 +224,8 @@ async function runTests() {
         
         const savedReport = userSub.reports.find(r => r.id === 'B82LM4');
         assert.ok(savedReport, 'Report B82LM4 must be saved in database');
-        assert.strictEqual(savedReport.shortURL, 'http://localhost:3096/B82LM4');
-        assert.strictEqual(savedReport.data.short_url, 'http://localhost:3096/B82LM4');
+        assert.strictEqual(savedReport.shortURL, 'https://sehaedu.s.gy/B82LM4');
+        assert.strictEqual(savedReport.data.short_url, 'https://sehaedu.s.gy/B82LM4');
         assert.strictEqual(savedReport.data.service_code, 'B82LM4');
         pass('shortURL correctly persisted in database record and data object');
     } catch (e) { fail('Database persistence check', e); }
