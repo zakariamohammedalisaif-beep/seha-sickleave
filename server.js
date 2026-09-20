@@ -2240,12 +2240,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
     </div>
 
     <!-- Bottom Footer Row: Time/Date & NHIC Logo (margin-right: -10px aligns NHIC to exact 30px page edge) -->
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0; margin-top:6px; margin-right:-10px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; padding: 0; margin-top:8px; margin-right:-10px;">
       
       <!-- Left: Time / Date -->
-      <div style="font-weight:bold;font-size:12px;color:#000;font-family:'Arial',sans-serif;">
-        <p style="margin:0 0 15px 0;">${d.time || ''}</p>
-        <p style="margin:0;">${d.dayDate || d.date || ''}</p>
+      <div style="font-weight:bold;font-size:12px;color:#000;font-family:'Arial',sans-serif; padding-top:55px;">
+        <p style="margin:0 0 10px 0; line-height:1.2;">${d.time || ''}</p>
+        <p style="margin:0; line-height:1.2;">${d.dayDate || d.date || ''}</p>
       </div>
 
       <!-- Right: NHIC Logo -->

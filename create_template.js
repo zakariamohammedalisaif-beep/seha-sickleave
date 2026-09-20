@@ -124,8 +124,8 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
             <a style="font-size: 10px; font-weight: bold; color: #0000EE; text-decoration: underline;">www.seha.sa/#/inquiries/slenquiry</a>
             
             <div style="margin-top: auto; text-align: left; font-weight: bold; font-size: 12px; color: #000; padding-bottom: 20px;">
-                <p id="pdf-time" style="margin: 0 0 15px 0;">10:38 AM</p>
-                <p id="pdf-day-date" style="margin: 0;">Saturday, 15 August 2026</p>
+                <p id="pdf-time" style="margin: 0 0 10px 0; line-height: 1.2;">10:38 AM</p>
+                <p id="pdf-day-date" style="margin: 0; line-height: 1.2;">Saturday, 15 August 2026</p>
             </div>
         </div>
 
