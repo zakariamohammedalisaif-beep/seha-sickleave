@@ -2101,14 +2101,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 1.3px solid #cccccc; }
   tr { height: 40px; }
   td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; }
-  .label-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13px; width: 150px; }
-  .label-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #154d79; font-size: 13.5px; width: 150px; }
-  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #111827; }
-  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #111827; }
-  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #111827; }
-  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #111827; }
-  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.5px; color: #111827; white-space: nowrap; }
-  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.8px; color: #111827; white-space: nowrap; }
+  .label-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13px; width: 150px; }
+  .label-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13.5px; width: 150px; }
+  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #293C73; }
+  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #293C73; }
+  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #293C73; }
+  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; }
+  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.5px; color: #293C73; white-space: nowrap; }
+  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; letter-spacing: 0.8px; color: #293C73; white-space: nowrap; }
   .dur-row td { background-color: #1F3864 !important; color: white; border: 1.3px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 13px; }
   tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }
@@ -2128,8 +2128,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   
   <!-- Header: Arabic & English Titles -->
   <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#1a5b8c;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#1a5b8c;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+    <h1 style="color:#316DB5;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#293C73;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
   </div>
 
   <!-- Data Table & Footer Container -->
