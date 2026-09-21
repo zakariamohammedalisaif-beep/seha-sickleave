@@ -1021,6 +1021,95 @@ app.get('/api/admin/reports', async (req, res) => {
     }
 });
 
+// Admin Diagnostic Endpoint for Persistent Storage Inspection
+app.get('/api/admin/diagnostics', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+    
+    try {
+        const fsSync = require('fs');
+        const { execSync } = require('child_process');
+
+        const inspectDir = (dirPath) => {
+            if (!dirPath || !fsSync.existsSync(dirPath)) return { exists: false };
+            try {
+                const files = fsSync.readdirSync(dirPath);
+                const fileStats = {};
+                for (const f of files) {
+                    try {
+                        const s = fsSync.statSync(path.join(dirPath, f));
+                        fileStats[f] = { size: s.size, isDirectory: s.isDirectory(), modified: s.mtime };
+                    } catch (e) {
+                        fileStats[f] = { error: e.message };
+                    }
+                }
+                return { exists: true, path: dirPath, files: fileStats };
+            } catch (e) {
+                return { exists: true, path: dirPath, error: e.message };
+            }
+        };
+
+        let dfOutput = '';
+        let mountOutput = '';
+        if (process.platform !== 'win32') {
+            try { dfOutput = execSync('df -h /data / 2>&1').toString(); } catch (e) { dfOutput = e.message; }
+            try { mountOutput = execSync('mount 2>&1 | grep -iE "data|render" || true').toString(); } catch (e) { mountOutput = e.message; }
+        }
+
+        const diag = {
+            platform: process.platform,
+            nodeVersion: process.version,
+            env_DATA_DIR: process.env.DATA_DIR || null,
+            dataManager_baseDir: dataManager.baseDir,
+            storage_locations: {
+                configured_baseDir: inspectDir(dataManager.baseDir),
+                slash_data: inspectDir('/data'),
+                slash_var_data: inspectDir('/var/data'),
+                local_app_data: inspectDir(path.join(__dirname, 'data'))
+            },
+            disk_info: {
+                df: dfOutput.trim(),
+                mount: mountOutput.trim()
+            },
+            dataManager_stats: await dataManager.getStats()
+        };
+
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        res.json({ success: true, diagnostics: diag });
+    } catch (err) {
+        console.error('Diagnostics error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin Safe Data Merge Endpoint (Zero Overwrite of Existing Live Data)
+app.post('/api/admin/storage/merge-data', express.json({ limit: '10mb' }), async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+
+    try {
+        const { reports = {}, subscribers = {}, transactions = [] } = req.body;
+        const crypto = require('crypto');
+        const fsSync = require('fs');
+
+        const result = await dataManager.mergeDataSafe({ reports, subscribers, transactions });
+
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        res.json({
+            success: true,
+            message: 'Data merged safely without overwriting live production records.',
+            ...result
+        });
+    } catch (err) {
+        console.error('Merge Data Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Admin Add Subscriber Endpoint (Persistent Database Write - Rule 8 & 9)
 app.post('/api/admin/web/user/add', async (req, res) => {
     const auth = verifyAdmin(req);

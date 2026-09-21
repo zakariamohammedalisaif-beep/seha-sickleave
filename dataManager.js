@@ -771,6 +771,108 @@ class DataManager {
         });
     }
 
+    async mergeDataSafe({ reports = {}, subscribers = {}, transactions = [] }) {
+        return withDbLock(async () => {
+            const currentReports = await readJsonSafe(reportsFile, {});
+            const currentSubs = await readJsonSafe(subscriptionsFile, {});
+            const currentTxs = await readJsonSafe(transactionsFile, []);
+
+            const reportsCountBefore = Object.keys(currentReports).length;
+            const subsCountBefore = Object.keys(currentSubs).length;
+            const txsCountBefore = currentTxs.length;
+
+            let addedReports = 0;
+            let mergedSubs = 0;
+            let addedTxs = 0;
+
+            // 1. Merge Reports (Strict Non-Destructive: never overwrite existing live report)
+            for (const [repId, repData] of Object.entries(reports)) {
+                if (!currentReports[repId]) {
+                    currentReports[repId] = repData;
+                    addedReports++;
+                }
+            }
+
+            // 2. Merge Subscribers (Never reduce points, never cancel active, preserve live generated reports)
+            for (const [cid, incomingUser] of Object.entries(subscribers)) {
+                if (!currentSubs[cid]) {
+                    currentSubs[cid] = normalizeSubscription(incomingUser);
+                    mergedSubs++;
+                } else {
+                    const liveUser = currentSubs[cid];
+                    // Keep max points
+                    liveUser.points = Math.max(Number(liveUser.points || 0), Number(incomingUser.points || 0));
+                    liveUser.balance_points = liveUser.points;
+
+                    // If owner, ensure 10000 and active
+                    if (cid === OWNER_CHAT_ID) {
+                        liveUser.points = Math.max(10000, liveUser.points);
+                        liveUser.balance_points = liveUser.points;
+                        liveUser.status = 'active';
+                        liveUser.plan = 'unlimited';
+                        liveUser.report_payment_source = 'unlimited';
+                    }
+
+                    // Merge reports array (union of IDs)
+                    const liveRepIds = new Set(Array.isArray(liveUser.reports) ? liveUser.reports.map(r => typeof r === 'string' ? r : r.id) : []);
+                    const incomingRepIds = Array.isArray(incomingUser.reports) ? incomingUser.reports.map(r => typeof r === 'string' ? r : r.id) : [];
+                    for (const id of incomingRepIds) {
+                        if (id) liveRepIds.add(id);
+                    }
+                    liveUser.reports = Array.from(liveRepIds);
+                    liveUser.reportsCount = liveUser.reports.length;
+
+                    // Keep active status if either was active
+                    if (incomingUser.status === 'active') liveUser.status = 'active';
+                    if (incomingUser.plan === 'unlimited') {
+                        liveUser.plan = 'unlimited';
+                        liveUser.report_payment_source = 'unlimited';
+                    }
+
+                    currentSubs[cid] = normalizeSubscription(liveUser);
+                    mergedSubs++;
+                }
+            }
+
+            // 3. Merge Transactions
+            const existingTxIds = new Set(currentTxs.map(t => t.id));
+            for (const tx of transactions) {
+                if (tx && tx.id && !existingTxIds.has(tx.id)) {
+                    currentTxs.push(tx);
+                    existingTxIds.add(tx.id);
+                    addedTxs++;
+                }
+            }
+
+            // Write all atomically
+            await atomicWriteJson(reportsFile, currentReports);
+            await atomicWriteJson(subscriptionsFile, currentSubs);
+            await atomicWriteJson(transactionsFile, currentTxs);
+
+            const reportsCountAfter = Object.keys(currentReports).length;
+            const subsCountAfter = Object.keys(currentSubs).length;
+            const txsCountAfter = currentTxs.length;
+
+            const crypto = require('crypto');
+            const fsSync = require('fs');
+            const raw = fsSync.readFileSync(reportsFile);
+            const reportsHash = crypto.createHash('sha256').update(raw).digest('hex');
+
+            return {
+                reports: { before: reportsCountBefore, after: reportsCountAfter, added: addedReports },
+                subscribers: { before: subsCountBefore, after: subsCountAfter, merged: mergedSubs },
+                transactions: { before: txsCountBefore, after: txsCountAfter, added: addedTxs },
+                reportsSha256: reportsHash,
+                ownerStatus: {
+                    chatId: OWNER_CHAT_ID,
+                    points: currentSubs[OWNER_CHAT_ID]?.points,
+                    status: currentSubs[OWNER_CHAT_ID]?.status,
+                    plan: currentSubs[OWNER_CHAT_ID]?.plan
+                }
+            };
+        });
+    }
+
     async getMetadata() {
         return withDbLock(async () => {
             return readJsonSafe(metadataFile, { migration_version: 0 });
