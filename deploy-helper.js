@@ -37,7 +37,7 @@ console.log('');
 console.log('🔄 Testing server startup...\n');
 
 // Set environment for local testing
-process.env.WEB_APP_URL = 'https://seha-sickleave-app.onrender.com';
+process.env.WEB_APP_URL = 'https://seha-sickleave-1.onrender.com';
 
 try {
     require('./server.js');

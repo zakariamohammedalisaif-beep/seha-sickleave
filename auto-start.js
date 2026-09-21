@@ -69,7 +69,7 @@ async function main() {
         log('⚠️  ngrok غير موجود - سيتم تشغيل التطبيق محلياً فقط');
     }
 
-    let webAppUrl = process.env.WEB_APP_URL || 'https://seha-sickleave-app.onrender.com';
+    let webAppUrl = process.env.WEB_APP_URL || 'https://seha-sickleave-1.onrender.com';
 
     log(`تشغيل السيرفر على المنفذ ${PORT}...`);
     log(`WEB_APP_URL = ${webAppUrl}`);

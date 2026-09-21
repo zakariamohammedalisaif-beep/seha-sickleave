@@ -320,15 +320,19 @@ const app = {
             document.getElementById('fab-menu').style.display = 'none';
         }
 
+        const queryChatId = urlParams.get('chatId');
         if (this.tg) {
             this.tg.expand();
             if (this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) {
-                this.state.chatId = this.tg.initDataUnsafe.user.id;
+                this.state.chatId = this.tg.initDataUnsafe.user.id.toString();
                 this.state.user = this.tg.initDataUnsafe.user;
+            } else if (queryChatId) {
+                this.state.chatId = queryChatId;
             } else {
-                // Mock for local testing
                 this.state.chatId = "123456789";
             }
+        } else if (queryChatId) {
+            this.state.chatId = queryChatId;
         } else {
             this.state.chatId = "123456789";
         }

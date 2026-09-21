@@ -13,8 +13,8 @@ let currentAdminToken = null;
 // Configuration
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
 const PORT = process.env.PORT || 3000;
-const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave-app.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=51';
+const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave-1.onrender.com';
+const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=53';
 // Target URL for PDF QR code & clickable link (matches target project https://seha-sa.s.gy)
 const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || 'https://seha-sa.s.gy/inquiries';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
@@ -313,12 +313,11 @@ bot.onText(/\/admin/, async (msg) => {
     }
     
     currentAdminToken = crypto.randomBytes(16).toString('hex');
-    const adminUrl = `${process.env.APP_URL || 'https://seha-sickleave-app.onrender.com'}/index.html?screen=admin&token=${currentAdminToken}`;
-    
-        const inquiryUrl = `${process.env.APP_URL || 'https://seha-sickleave.onrender.com'}/inquiry`;
+    const adminUrl = `${WEB_APP_URL}/index.html?screen=admin&token=${currentAdminToken}`;
+    const inquiryUrl = `${WEB_APP_URL}/inquiry`;
     const inlineKeyboard = [
-        [{ text: 'Open', web_app: { url: adminUrl } }],
-        [{ text: 'Open', web_app: { url: inquiryUrl } }]
+        [{ text: '⚙️ لوحة الإدارة (Admin Dashboard)', web_app: { url: adminUrl } }],
+        [{ text: '🔍 الاستعلام عن تقرير (Inquiry)', web_app: { url: inquiryUrl } }]
     ];
     
     await bot.sendMessage(chatId, 'مرحباً بك يا مدير النظام! اضغط على الزر أدناه لفتح لوحة تحكم المشتركين:', {
@@ -2569,6 +2568,57 @@ const configureChatMenuButton = async (targetChatId = null) => {
         console.warn('Could not set ChatMenuButton:', e.message);
     }
 };
+
+// Admin endpoint to inspect & force-update Telegram Menu Button
+app.get('/api/admin/menu-button', async (req, res) => {
+    try {
+        const https = require('https');
+        const getMenuBtn = (chatIdVal = null) => {
+            return new Promise((resolve) => {
+                const body = chatIdVal ? JSON.stringify({ chat_id: chatIdVal.toString() }) : '{}';
+                const req = https.request({
+                    hostname: 'api.telegram.org',
+                    path: `/bot${TOKEN}/getChatMenuButton`,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(body)
+                    }
+                }, (response) => {
+                    let d = '';
+                    response.on('data', c => d += c);
+                    response.on('end', () => {
+                        try { resolve(JSON.parse(d)); } catch { resolve({ raw: d }); }
+                    });
+                });
+                req.on('error', e => resolve({ error: e.message }));
+                req.write(body);
+                req.end();
+            });
+        };
+
+        const defaultBtn = await getMenuBtn(null);
+        const ownerBtn = await getMenuBtn(ADMIN_CHAT_ID);
+        res.json({
+            success: true,
+            configured_url: WEB_APP_URL_CACHED,
+            default_menu_button: defaultBtn,
+            owner_menu_button: ownerBtn
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/menu-button/sync', async (req, res) => {
+    try {
+        await configureChatMenuButton();
+        if (ADMIN_CHAT_ID) await configureChatMenuButton(ADMIN_CHAT_ID);
+        res.json({ success: true, message: 'Menu button synced', url: WEB_APP_URL_CACHED });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // Start Server
 const startServer = async () => {

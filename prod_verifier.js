@@ -1,7 +1,7 @@
 // Production Real-World Verification Script
 // Direct verification against https://seha-sickleave-app.onrender.com
 
-const BASE_URL = 'https://seha-sickleave-app.onrender.com';
+const BASE_URL = 'https://seha-sickleave-1.onrender.com';
 const ADMIN_TOKEN = 'ZAK-99X-ADMIN-2026';
 
 async function main() {
