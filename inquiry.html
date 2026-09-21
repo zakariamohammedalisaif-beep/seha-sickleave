@@ -847,11 +847,11 @@
                     }
 
                     document.getElementById('rIssueDate').innerText = rep.issueDate || rData.issue_date || '-';
-                    document.getElementById('rStartDate').innerText = rep.startDate || rData.admission_date || '-';
-                    document.getElementById('rEndDate').innerText = rep.endDate || rData.discharge_date || '-';
+                    document.getElementById('rStartDate').innerText = rep.startDate || rData.admission_date || rData.admissionG || rep.issueDate || '-';
+                    document.getElementById('rEndDate').innerText = rep.endDate || rData.discharge_date || rData.dischargeG || rep.startDate || rep.issueDate || '-';
                     document.getElementById('rDuration').innerText = rep.duration || rData.duration || '1';
-                    document.getElementById('rDoctorName').innerText = rep.doctorName || rData.doctor_name_ar || '-';
-                    document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || 'طبيب عام';
+                    document.getElementById('rDoctorName').innerText = rep.doctorName || rData.doctor_name_ar || rData.doctorAr || rData.docNameAr || '-';
+                    document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || rData.positionAr || 'طبيب عام';
 
                     // Set inputs to readOnly (NOT disabled, so users can long-press and copy text completely)
                     sCodeInput.readOnly = true;

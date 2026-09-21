@@ -1565,6 +1565,12 @@ app.post('/api/inquiry', async (req, res) => {
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
             const rData = foundReport.data || {};
             const isCompanion = (foundReport.type === 'companion' || foundReport.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0) || (foundReport.companionName && foundReport.companionName.trim().length > 0));
+            const resolvedIssueDate = rData.issue_date || foundReport.issue_date || foundReport.issueDate || '';
+            const resolvedStartDate = rData.admission_date || rData.start_date || rData.startDate || rData.admissionG || foundReport.startDate || resolvedIssueDate;
+            const resolvedEndDate = rData.discharge_date || rData.end_date || rData.endDate || rData.dischargeG || foundReport.endDate || resolvedStartDate || resolvedIssueDate;
+            const resolvedDoctorName = rData.doctor_name_ar || rData.doctorAr || rData.docNameAr || rData.doctor_name || foundReport.doctorName || foundReport.doctorAr || foundReport.docNameAr || 'طبيب عام';
+            const resolvedJobTitle = rData.job_title_ar || rData.positionAr || rData.position || rData.job_title || foundReport.jobTitle || 'طبيب عام';
+
             const formatted = {
                 id: foundReport.id || leaveId,
                 serviceCode: foundReport.id || leaveId,
@@ -1574,12 +1580,12 @@ app.post('/api/inquiry', async (req, res) => {
                 patientName: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || '',
                 companionName: rData.escort_name_ar || foundReport.companionName || '',
                 relation: rData.relation_ar || foundReport.relation || '',
-                issueDate: rData.issue_date || foundReport.issue_date || foundReport.issueDate || '',
-                startDate: rData.admission_date || rData.start_date || rData.admissionG || foundReport.startDate || '',
-                endDate: rData.discharge_date || rData.end_date || rData.dischargeG || foundReport.endDate || '',
+                issueDate: resolvedIssueDate,
+                startDate: resolvedStartDate,
+                endDate: resolvedEndDate,
                 duration: String(rData.duration || foundReport.duration || '1'),
-                doctorName: rData.doctor_name_ar || rData.doctor_name || rData.doctorAr || foundReport.doctorName || '',
-                jobTitle: rData.job_title_ar || rData.position || rData.job_title || foundReport.jobTitle || 'طبيب عام',
+                doctorName: resolvedDoctorName,
+                jobTitle: resolvedJobTitle,
                 hospital: rData.hospital_ar || foundReport.hospital || '',
                 data: rData
             };
@@ -2378,26 +2384,26 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             file_id: message.document?.file_id,
             status: 'issued',
             data: {
-                admission_date: d.startDate || d.admission_date,
-                discharge_date: d.endDate || d.discharge_date,
-                duration: d.duration || '1',
-                issue_date: d.issueDate || d.issue_date,
-                issue_time: d.issueTime || d.issue_time,
+                admission_date: d.startDate || d.admission_date || d.admissionG || d.start_date || d.issueDate || d.issue_date,
+                discharge_date: d.endDate || d.discharge_date || d.dischargeG || d.end_date || d.startDate || d.admission_date || d.admissionG || d.issueDate || d.issue_date,
+                duration: String(d.duration || '1'),
+                issue_date: d.issueDate || d.issue_date || d.admissionG || new Date().toISOString().slice(0, 10),
+                issue_time: d.issueTime || d.issue_time || d.time || '',
                 national_id: d.nationalId || d.national_id,
-                patient_name_ar: d.nameAr || d.patient_name_ar,
-                patient_name_en: d.nameEn || d.patient_name_en,
-                escort_name_ar: d.escort_name_ar || '',
-                escort_name_en: d.escort_name_en || '',
-                relation_ar: d.relation_ar || '',
-                relation_en: d.relation_en || '',
-                doctor_name_ar: d.docNameAr || d.doctor_name_ar,
-                doctor_name_en: d.docNameEn || d.doctor_name_en,
-                job_title_ar: d.positionAr || d.job_title_ar,
-                job_title_en: d.positionEn || d.job_title_en,
-                hospital_ar: d.hospitalAr || d.hospital_ar,
-                hospital_en: d.hospitalEn || d.hospital_en,
-                hospital_type: d.hospitalType || d.hospital_type,
-                license_number: d.licenseNumber || d.license_number,
+                patient_name_ar: (d.type === 'companion' || d.type === 'companion_review') ? (d.patient_name_ar || d.patientName || d.nameAr) : (d.nameAr || d.patient_name_ar),
+                patient_name_en: (d.type === 'companion' || d.type === 'companion_review') ? (d.patient_name_en || d.patientNameEn || d.nameEn) : (d.nameEn || d.patient_name_en),
+                escort_name_ar: d.escort_name_ar || ((d.type === 'companion' || d.type === 'companion_review') ? d.nameAr : '') || '',
+                escort_name_en: d.escort_name_en || ((d.type === 'companion' || d.type === 'companion_review') ? d.nameEn : '') || '',
+                relation_ar: d.relation_ar || d.relationAr || '',
+                relation_en: d.relation_en || d.relationEn || '',
+                doctor_name_ar: d.doctorAr || d.docNameAr || d.doctor_name_ar || d.doctor_name || '',
+                doctor_name_en: d.doctorEn || d.docNameEn || d.doctor_name_en || '',
+                job_title_ar: d.positionAr || d.job_title_ar || d.position || 'طبيب عام',
+                job_title_en: d.positionEn || d.job_title_en || 'General Physician',
+                hospital_ar: d.hospitalAr || d.hospital_ar || '',
+                hospital_en: d.hospitalEn || d.hospital_en || '',
+                hospital_type: d.hospitalType || d.hospital_type || 'gov',
+                license_number: d.licenseNumber || d.license_number || '',
                 leaveId: sanitizedLeaveId,
                 service_code: sanitizedLeaveId,
                 short_url: shortURL
