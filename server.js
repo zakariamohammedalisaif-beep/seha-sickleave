@@ -747,6 +747,17 @@ bot.on('callback_query', async (query) => {
 
 // API Endpoints
 
+// Health Check Endpoint (Render & Monitoring)
+app.get(['/health', '/api/health'], (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        uptime: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString(),
+        service: 'seha-sickleave-app',
+        live: true
+    });
+});
+
 // Admin: Add user securely
 app.post('/api/admin/add-user', express.json(), async (req, res) => {
     try {
@@ -1862,22 +1873,22 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 <body>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; user-select: text; -webkit-user-select: text; }
   html { background: #fff !important; }
-  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; }
+  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; user-select: text; -webkit-user-select: text; }
   @page { size: 794px 1123px; margin: 0; }
   table { border-spacing: 0; direction: ltr; border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
   .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 1.3px solid #cccccc; }
   tr { height: 40px; }
-  td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; }
+  td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; user-select: text; -webkit-user-select: text; }
   .label-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13px; width: 150px; }
   .label-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13.5px; width: 150px; }
-  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #293C73; }
-  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #293C73; }
-  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #293C73; }
-  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; }
-  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; }
-  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; }
+  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #293C73; word-break: keep-all; }
+  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #293C73; word-break: keep-all; }
+  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #293C73; word-break: keep-all; }
+  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; word-break: keep-all; }
+  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
+  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
   .dur-row td { background-color: #1F3864 !important; color: white; border: 1.3px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 13px; }
   tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }

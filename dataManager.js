@@ -5,7 +5,12 @@ const path = require('path');
 // Determine Persistent Data Directory
 // On Render, DATA_DIR can be set to the mount path of a Persistent Disk (e.g. /data or /var/data)
 // In local development or fallback, it defaults to path.join(__dirname, 'data')
-const baseDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, 'data');
+let persistentDir = process.env.DATA_DIR;
+if (!persistentDir && process.platform !== 'win32') {
+    if (fsSync.existsSync('/data')) persistentDir = '/data';
+    else if (fsSync.existsSync('/var/data')) persistentDir = '/var/data';
+}
+const baseDir = persistentDir ? path.resolve(persistentDir) : path.join(__dirname, 'data');
 
 const subscriptionsFile = path.join(baseDir, 'subscriptions.json');
 const reportsFile = path.join(baseDir, 'reports.json');
