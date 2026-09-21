@@ -2578,39 +2578,37 @@ const startServer = async () => {
         await bootstrapOwnerAccount();
         startBackgroundScheduler();
 
-        // 2. Configure Webhook if in Production (Render)
-        if (isProduction) {
-            const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
-            await bot.setWebHook(webhookUrl);
-            console.log(`✓ Webhook set to: ${webhookUrl}`);
-        }
-
-        // 3. Configure Open button with the correct Render URL
-        await configureChatMenuButton();
-
-        
-        // Ensure Puppeteer Chrome is installed on Render
-        if (process.env.NODE_ENV !== 'test') {
-            try {
-                console.log('Checking and installing Puppeteer Chrome if missing...');
-                const { execSync } = require('child_process');
-                execSync('npx puppeteer browsers install chrome', { stdio: 'inherit' });
-                console.log('Chrome installation verified.');
-            } catch (err) {
-                console.error('Failed to ensure Chrome:', err.message);
-            }
-        }
-
-        return new Promise((resolve) => {
-            const srv = app.listen(PORT, () => {
+        // 2. Start HTTP Server immediately so Render health check & port detector pass
+        const srv = await new Promise((resolve) => {
+            const serverInstance = app.listen(PORT, () => {
                 console.log(`\n=== SEHA Sick Leave App ===`);
                 console.log(`✓ Server running at http://localhost:${PORT}`);
                 console.log(`✓ WEB_APP_URL = ${WEB_APP_URL}`);
                 console.log(`✓ Bot mode: ${isProduction ? 'Webhook (Production/Render)' : 'Polling (Local)'}`);
-                console.log(`✓ Database: Local subscriptions.json\n`);
-                resolve(srv);
+                console.log(`✓ Database: Persistent DataManager\n`);
+                resolve(serverInstance);
             });
         });
+
+        // 3. Configure Webhook safely (does not abort server if Telegram has a temporary error)
+        if (isProduction) {
+            try {
+                const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
+                await bot.setWebHook(webhookUrl);
+                console.log(`✓ Webhook set to: ${webhookUrl}`);
+            } catch (whErr) {
+                console.warn('⚠️ Webhook setup notice:', whErr.message);
+            }
+        }
+
+        // 4. Configure Open menu button safely
+        try {
+            await configureChatMenuButton();
+        } catch (mbErr) {
+            console.warn('⚠️ ChatMenuButton setup notice:', mbErr.message);
+        }
+
+        return srv;
     } catch (err) {
         console.error('Failed to start server:', err);
         process.exit(1);
