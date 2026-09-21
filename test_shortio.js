@@ -31,8 +31,8 @@ async function runTests() {
     console.log('--- TEST GROUP 1: DOMAIN & ENVIRONMENT CONFIGURATION ---');
     try {
         const domain = shortIoService.getDomain();
-        assert.strictEqual(domain, 'seha-sa.s.gy', 'Domain must be exactly seha-sa.s.gy');
-        pass('Default domain is strictly seha-sa.s.gy');
+        assert.strictEqual(domain, 'sehaedu.s.gy', 'Domain must be exactly sehaedu.s.gy');
+        pass('Default domain is strictly sehaedu.s.gy');
     } catch (e) { fail('Default domain check', e); }
 
     try {
@@ -73,8 +73,8 @@ async function runTests() {
 
     try {
         const fallbackUrl = shortIoService.buildFallbackUrl('B82LM4');
-        assert.strictEqual(fallbackUrl, 'https://seha-sa.s.gy/B82LM4');
-        pass('Constructed Short URL strictly matches format: https://seha-sa.s.gy/B82LM4');
+        assert.strictEqual(fallbackUrl, 'https://sehaedu.s.gy/B82LM4');
+        pass('Constructed Short URL strictly matches format: https://sehaedu.s.gy/B82LM4');
     } catch (e) { fail('Fallback URL format check', e); }
 
     // GROUP 3: LINK CREATION & IN-MEMORY CACHE
@@ -88,8 +88,8 @@ async function runTests() {
         });
 
         assert.strictEqual(res1.success, true);
-        assert.strictEqual(res1.shortURL, 'https://seha-sa.s.gy/B82LM4');
-        assert.strictEqual(res1.domain, 'seha-sa.s.gy');
+        assert.strictEqual(res1.shortURL, 'https://sehaedu.s.gy/B82LM4');
+        assert.strictEqual(res1.domain, 'sehaedu.s.gy');
         assert.strictEqual(res1.path, 'B82LM4');
         pass('createShortLink returns valid shortURL for B82LM4');
 
@@ -100,7 +100,7 @@ async function runTests() {
         });
 
         assert.strictEqual(res2.success, true);
-        assert.strictEqual(res2.shortURL, 'https://seha-sa.s.gy/B82LM4');
+        assert.strictEqual(res2.shortURL, 'https://sehaedu.s.gy/B82LM4');
         assert.strictEqual(res2.fromCache, true);
         pass('Duplicate call served from in-memory cache (prevents redundant API calls)');
     } catch (e) { fail('Link creation and cache check', e); }
@@ -210,8 +210,8 @@ async function runTests() {
 
         assert.strictEqual(pdfReq.status, 200);
         assert.strictEqual(pdfReq.body.success, true);
-        assert.strictEqual(pdfReq.body.shortURL, 'https://seha-sa.s.gy/B82LM4');
-        pass('PDF generation succeeded with shortURL: https://seha-sa.s.gy/B82LM4');
+        assert.strictEqual(pdfReq.body.shortURL, 'https://sehaedu.s.gy/B82LM4');
+        pass('PDF generation succeeded with shortURL: https://sehaedu.s.gy/B82LM4');
     } catch (e) { fail('PDF generation with Short.io check', e); }
 
     // GROUP 6: DATABASE PERSISTENCE & INQUIRY VERIFICATION
@@ -224,8 +224,8 @@ async function runTests() {
         
         const savedReport = userSub.reports.find(r => r.id === 'B82LM4');
         assert.ok(savedReport, 'Report B82LM4 must be saved in database');
-        assert.strictEqual(savedReport.shortURL, 'https://seha-sa.s.gy/B82LM4');
-        assert.strictEqual(savedReport.data.short_url, 'https://seha-sa.s.gy/B82LM4');
+        assert.strictEqual(savedReport.shortURL, 'https://sehaedu.s.gy/B82LM4');
+        assert.strictEqual(savedReport.data.short_url, 'https://sehaedu.s.gy/B82LM4');
         assert.strictEqual(savedReport.data.service_code, 'B82LM4');
         pass('shortURL correctly persisted in database record and data object');
     } catch (e) { fail('Database persistence check', e); }

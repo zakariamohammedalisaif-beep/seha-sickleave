@@ -15,8 +15,8 @@ const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave-1.onrender.com';
 const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=53';
-// Target URL for PDF QR code & clickable link (matches target project https://seha-sa.s.gy)
-const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || 'https://seha-sa.s.gy/inquiries';
+// Target URL for PDF QR code & clickable link (matches project inquiry portal)
+const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || `${WEB_APP_URL}/inquiries/slenquiry`;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
 const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || '6316398194';
 const OWNER_CONTACT = `https://t.me/${ADMIN_USERNAME}`;
@@ -1848,7 +1848,7 @@ app.post('/api/report/:chatId', async (req, res) => {
             // Ensure Short.io shortURL is generated and attached
             const leaveId = shortIoService.sanitizePath(reportData.id || (reportData.data && (reportData.data.leaveId || reportData.data.service_code)));
             if (leaveId) {
-                if (!reportData.shortURL || reportData.shortURL.includes('sehaedu.s.gy')) {
+                if (!reportData.shortURL || reportData.shortURL.includes('seha-sa.s.gy')) {
                     try {
                         const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(leaveId)}`;
                         const shortRes = await shortIoService.createShortLink({
@@ -2067,7 +2067,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback)
         let shortURL = d.shortURL || d.short_url;
-        if (!shortURL || shortURL.includes('sehaedu.s.gy')) {
+        if (!shortURL || shortURL.includes('seha-sa.s.gy')) {
             try {
                 const shortResult = await shortIoService.createShortLink({
                     originalURL: originalInquiryUrl,

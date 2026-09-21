@@ -7,7 +7,7 @@
  */
 
 const API_BASE_URL = 'https://api.short.io';
-const DEFAULT_DOMAIN = 'seha-sa.s.gy';
+const DEFAULT_DOMAIN = 'sehaedu.s.gy';
 const DEFAULT_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 2;
 
@@ -21,11 +21,7 @@ class ShortIoService {
      * Get configured domain from environment or fallback to default
      */
     getDomain() {
-        const configured = (process.env.SHORTIO_DOMAIN || '').trim().toLowerCase();
-        if (configured && !configured.includes('sehaedu.s.gy')) {
-            return configured;
-        }
-        return DEFAULT_DOMAIN;
+        return (process.env.SHORTIO_DOMAIN || DEFAULT_DOMAIN).trim().toLowerCase();
     }
 
     /**
