@@ -473,6 +473,20 @@ class DataManager {
         });
     }
 
+    async deleteSubscriber(chatId) {
+        return withDbLock(async () => {
+            const cleanId = String(chatId).trim();
+            if (cleanId === OWNER_CHAT_ID) return false;
+            const subs = await readJsonSafe(subscriptionsFile, {});
+            if (subs[cleanId]) {
+                delete subs[cleanId];
+                await atomicWriteJson(subscriptionsFile, subs);
+                return true;
+            }
+            return false;
+        });
+    }
+
     async updateSubscriber(chatId, updateFn) {
         return withDbLock(async () => {
             const subs = await readJsonSafe(subscriptionsFile, {});

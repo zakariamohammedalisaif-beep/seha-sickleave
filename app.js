@@ -1926,3 +1926,5 @@ window.onload = () => {
     });
 };
 
+window.app = app;
+
