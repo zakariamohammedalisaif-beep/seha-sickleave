@@ -2537,7 +2537,7 @@ app.get('/api/shortio/sync', async (req, res) => {
 // Diagnostic endpoint for Short.io
 app.get('/api/shortio/debug', async (req, res) => {
     const key = shortIoService.getApiKey();
-    const domain = shortIoService.getDomain();
+    const domain = (req.query.domain || shortIoService.getDomain()).trim().toLowerCase();
     
     if (!key) {
         const existingEnvKeys = Object.keys(process.env).filter(k => 
@@ -2551,6 +2551,24 @@ app.get('/api/shortio/debug', async (req, res) => {
             message: 'SHORTIO_API_KEY is not defined in environment variables on this server',
             matchingEnvKeysFound: existingEnvKeys
         });
+    }
+
+    if (req.query.action === 'add_domain') {
+        try {
+            const addRes = await fetch('https://api.short.io/domains', {
+                method: 'POST',
+                headers: {
+                    'Authorization': key,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ hostname: domain })
+            });
+            const addStatus = addRes.status;
+            const addData = await addRes.json().catch(() => ({}));
+            return res.json({ action: 'add_domain', domain, status: addStatus, data: addData });
+        } catch (e) {
+            return res.status(500).json({ action: 'add_domain', error: e.message });
+        }
     }
 
     try {
