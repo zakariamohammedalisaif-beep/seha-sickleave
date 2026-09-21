@@ -1364,6 +1364,57 @@ app.post('/api/admin/package', async (req, res) => {
     }
 });
 
+// Admin endpoint to inspect & force-update Telegram Menu Button
+app.get('/api/admin/menu-button', async (req, res) => {
+    try {
+        const https = require('https');
+        const getMenuBtn = (chatIdVal = null) => {
+            return new Promise((resolve) => {
+                const body = chatIdVal ? JSON.stringify({ chat_id: chatIdVal.toString() }) : '{}';
+                const req = https.request({
+                    hostname: 'api.telegram.org',
+                    path: `/bot${TOKEN}/getChatMenuButton`,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(body)
+                    }
+                }, (response) => {
+                    let d = '';
+                    response.on('data', c => d += c);
+                    response.on('end', () => {
+                        try { resolve(JSON.parse(d)); } catch { resolve({ raw: d }); }
+                    });
+                });
+                req.on('error', e => resolve({ error: e.message }));
+                req.write(body);
+                req.end();
+            });
+        };
+
+        const defaultBtn = await getMenuBtn(null);
+        const ownerBtn = await getMenuBtn(ADMIN_CHAT_ID);
+        res.json({
+            success: true,
+            configured_url: WEB_APP_URL_CACHED,
+            default_menu_button: defaultBtn,
+            owner_menu_button: ownerBtn
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/menu-button/sync', async (req, res) => {
+    try {
+        await configureChatMenuButton();
+        if (ADMIN_CHAT_ID) await configureChatMenuButton(ADMIN_CHAT_ID);
+        res.json({ success: true, message: 'Menu button synced', url: WEB_APP_URL_CACHED });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // --- Inquiry Endpoints ---
 app.get(['/inquiry', '/verify', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
     res.sendFile(path.join(__dirname, 'inquiry.html'));
@@ -2568,57 +2619,6 @@ const configureChatMenuButton = async (targetChatId = null) => {
         console.warn('Could not set ChatMenuButton:', e.message);
     }
 };
-
-// Admin endpoint to inspect & force-update Telegram Menu Button
-app.get('/api/admin/menu-button', async (req, res) => {
-    try {
-        const https = require('https');
-        const getMenuBtn = (chatIdVal = null) => {
-            return new Promise((resolve) => {
-                const body = chatIdVal ? JSON.stringify({ chat_id: chatIdVal.toString() }) : '{}';
-                const req = https.request({
-                    hostname: 'api.telegram.org',
-                    path: `/bot${TOKEN}/getChatMenuButton`,
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Content-Length': Buffer.byteLength(body)
-                    }
-                }, (response) => {
-                    let d = '';
-                    response.on('data', c => d += c);
-                    response.on('end', () => {
-                        try { resolve(JSON.parse(d)); } catch { resolve({ raw: d }); }
-                    });
-                });
-                req.on('error', e => resolve({ error: e.message }));
-                req.write(body);
-                req.end();
-            });
-        };
-
-        const defaultBtn = await getMenuBtn(null);
-        const ownerBtn = await getMenuBtn(ADMIN_CHAT_ID);
-        res.json({
-            success: true,
-            configured_url: WEB_APP_URL_CACHED,
-            default_menu_button: defaultBtn,
-            owner_menu_button: ownerBtn
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-app.post('/api/admin/menu-button/sync', async (req, res) => {
-    try {
-        await configureChatMenuButton();
-        if (ADMIN_CHAT_ID) await configureChatMenuButton(ADMIN_CHAT_ID);
-        res.json({ success: true, message: 'Menu button synced', url: WEB_APP_URL_CACHED });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 // Start Server
 const startServer = async () => {
