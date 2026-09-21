@@ -7,7 +7,7 @@
  */
 
 const API_BASE_URL = 'https://api.short.io';
-const DEFAULT_DOMAIN = 'sehaedu.s.gy';
+const DEFAULT_DOMAIN = 'seha-sa.s.gy';
 const DEFAULT_TIMEOUT_MS = 8000;
 const MAX_RETRIES = 2;
 
