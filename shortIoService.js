@@ -21,7 +21,11 @@ class ShortIoService {
      * Get configured domain from environment or fallback to default
      */
     getDomain() {
-        return (process.env.SHORTIO_DOMAIN || DEFAULT_DOMAIN).trim().toLowerCase();
+        const configured = (process.env.SHORTIO_DOMAIN || '').trim().toLowerCase();
+        if (configured && !configured.includes('sehaedu.s.gy')) {
+            return configured;
+        }
+        return DEFAULT_DOMAIN;
     }
 
     /**
