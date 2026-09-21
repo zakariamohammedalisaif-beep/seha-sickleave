@@ -1597,6 +1597,91 @@ app.post('/api/inquiry', async (req, res) => {
     }
 });
 
+// Seha Inquiry Compatibility Endpoint (matches sickleave-miniapp.online schema & seha-sar.onrender.com)
+app.all('/api/seha/inquiries/sick-leave-details', async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+
+    try {
+        const rawLeaveId = req.query.NormalizedServiceCode || req.query.leaveId || req.query.serviceCode || req.body?.NormalizedServiceCode || req.body?.leaveId || req.body?.service_code || '';
+        const rawNationalId = req.query.PatientId || req.query.nationalId || req.query.national_id || req.body?.PatientId || req.body?.nationalId || '';
+
+        const cleanDigits = (s) => String(s || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).trim();
+        const cleanCode = (s) => cleanDigits(s).toUpperCase().replace(/\s+/g, '');
+
+        const leaveId = cleanCode(rawLeaveId);
+        const nationalId = cleanDigits(rawNationalId);
+
+        if (!leaveId || !nationalId) {
+            return res.json({ ok: false, message: 'ادخل رمز الخدمة ورقم الهوية.', data: [] });
+        }
+
+        let foundReport = null;
+
+        // 1. Search DataManager
+        const rep = await dataManager.getReportByServiceCode(leaveId);
+        if (rep) {
+            const rNid = cleanDigits(rep.national_id || (rep.data && (rep.data.national_id || rep.data.nationalId)));
+            if (rNid === nationalId) {
+                foundReport = rep;
+            }
+        }
+
+        // 2. Fallback search in subscriptions
+        if (!foundReport) {
+            const data = await loadLocalSubscriptions();
+            for (const chatId in data.subscriptions) {
+                const sub = data.subscriptions[chatId];
+                if (sub.reports && Array.isArray(sub.reports)) {
+                    for (const r of sub.reports) {
+                        const rId = cleanCode(r.id || r.leaveId || (r.data && (r.data.id || r.data.leaveId || r.data.service_code)));
+                        if (rId === leaveId) {
+                            const rNid = cleanDigits((r.data && (r.data.national_id || r.data.nationalId)) || r.nationalId || r.national_id);
+                            if (rNid === nationalId) {
+                                foundReport = r;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (foundReport) break;
+            }
+        }
+
+        if (foundReport) {
+            const rData = foundReport.data || {};
+            const isCompanion = (foundReport.type === 'companion' || foundReport.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
+            const formattedItem = {
+                PatientName: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || '',
+                SickLeaveDate: rData.issue_date || foundReport.issue_date || foundReport.issueDate || '',
+                From: rData.admission_date || rData.start_date || rData.admissionG || foundReport.startDate || '',
+                To: rData.discharge_date || rData.end_date || rData.dischargeG || foundReport.endDate || '',
+                Duration: String(rData.duration || foundReport.duration || '1'),
+                'Doctor NAME': rData.doctor_name_ar || rData.doctor_name || rData.doctorAr || foundReport.doctorName || '',
+                JobTitle: rData.job_title_ar || rData.position || rData.job_title || foundReport.jobTitle || 'طبيب عام',
+                CompanionName: (isCompanion && (rData.escort_name_ar || foundReport.companionName)) ? (rData.escort_name_ar || foundReport.companionName) : null,
+                Relation: (isCompanion && (rData.relation_ar || foundReport.relation)) ? (rData.relation_ar || foundReport.relation) : null
+            };
+
+            return res.json({
+                ok: true,
+                data: [formattedItem]
+            });
+        } else {
+            return res.json({
+                ok: false,
+                message: 'رقم الهوية خاطئ',
+                data: []
+            });
+        }
+    } catch (err) {
+        console.error('Seha Details API Error:', err);
+        return res.status(500).json({ ok: false, message: 'حدث خطأ في جلب البيانات', error: err.message, data: [] });
+    }
+});
+
 app.post('/api/admin/package', async (req, res) => {
     try {
         const { token, chatId, points, subscriptionDays } = req.body;
