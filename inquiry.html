@@ -892,6 +892,12 @@
             document.getElementById('resultButtons').style.display = 'none';
             document.getElementById('initialButtons').style.display = 'block';
 
+            // Reset field text values to blank placeholders
+            ['rName', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rDoctorName', 'rJobTitle'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = '--';
+            });
+
             // Clean URL query parameters if present
             if (window.history.replaceState) {
                 window.history.replaceState(null, '', window.location.pathname);
