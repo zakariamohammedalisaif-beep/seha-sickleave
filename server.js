@@ -1763,7 +1763,7 @@ app.post('/api/report/:chatId', async (req, res) => {
             // Ensure Short.io shortURL is generated and attached
             const leaveId = shortIoService.sanitizePath(reportData.id || (reportData.data && (reportData.data.leaveId || reportData.data.service_code)));
             if (leaveId) {
-                if (!reportData.shortURL) {
+                if (!reportData.shortURL || reportData.shortURL.includes('sehaedu.s.gy')) {
                     try {
                         const originalInquiryUrl = `${WEB_APP_URL}/inquiries/slenquiry?id=${encodeURIComponent(leaveId)}`;
                         const shortRes = await shortIoService.createShortLink({
@@ -1982,7 +1982,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         // 3. Obtain Short.io URL (uses official API with timeout/retry or graceful fallback)
         let shortURL = d.shortURL || d.short_url;
-        if (!shortURL) {
+        if (!shortURL || shortURL.includes('sehaedu.s.gy')) {
             try {
                 const shortResult = await shortIoService.createShortLink({
                     originalURL: originalInquiryUrl,
