@@ -40,7 +40,7 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
             <tbody>
                 <tr>
                     <td style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; font-weight: bold; color: #316DB5; font-size: 13px; vertical-align: middle;">Leave ID</td>
-                    <td colspan="2" id="pdf-leave-id" style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; color: #293C73; font-weight: bold; font-size: 13.2px; letter-spacing: 0.5px; font-family: 'Arial', sans-serif; vertical-align: middle; white-space: nowrap;"></td>
+                    <td colspan="2" id="pdf-leave-id" style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; color: #293C73; font-weight: normal; font-size: 12.5px; letter-spacing: normal; font-family: 'Arial', sans-serif; vertical-align: middle; white-space: nowrap;"></td>
                     <td style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; font-weight: bold; font-size: 13.5px; color: #316DB5; vertical-align: middle;">رمز الإجازة</td>
                 </tr>
                 <tr style="background-color: #1F3864; color: white;">
@@ -74,7 +74,7 @@ const html = `<div id="pdf-content" dir="ltr" style="width: 794px; height: 1122p
                 </tr>
                 <tr>
                     <td style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; font-weight: bold; color: #316DB5; font-size: 13px; vertical-align: middle;">National ID / Iqama</td>
-                    <td colspan="2" id="pdf-national-id" style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; color: #293C73; font-family: 'Arial', sans-serif; letter-spacing: 0.8px; font-size: 13.2px; font-weight: bold; vertical-align: middle; white-space: nowrap;"></td>
+                    <td colspan="2" id="pdf-national-id" style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; color: #293C73; font-family: 'Arial', sans-serif; letter-spacing: normal; font-size: 12.5px; font-weight: normal; vertical-align: middle; white-space: nowrap;"></td>
                     <td style="border: 1.3px solid #cccccc; padding: 5px 6px; height: 40px; font-weight: bold; font-size: 13.5px; color: #316DB5; vertical-align: middle;">رقم الهوية/الاقامه</td>
                 </tr>
                 <tr style="background-color: #f7f7f7;">

@@ -1532,7 +1532,8 @@ app.post('/api/inquiry', async (req, res) => {
         if (rep) {
             foundLeaveIdMatch = true;
             const rNid = cleanDigits(rep.national_id || (rep.data && (rep.data.national_id || rep.data.nationalId)));
-            if (rNid === nationalId) {
+            const altIds = (rep.data && Array.isArray(rep.data.alt_national_ids)) ? rep.data.alt_national_ids.map(cleanDigits) : [];
+            if (rNid === nationalId || altIds.includes(nationalId)) {
                 foundReport = rep;
             }
         }
@@ -1548,7 +1549,8 @@ app.post('/api/inquiry', async (req, res) => {
                         if (rId === leaveId) {
                             foundLeaveIdMatch = true;
                             const rNid = cleanDigits((r.data && (r.data.national_id || r.data.nationalId)) || r.nationalId || r.national_id);
-                            if (rNid === nationalId) {
+                            const altIds = (r.data && Array.isArray(r.data.alt_national_ids)) ? r.data.alt_national_ids.map(cleanDigits) : [];
+                            if (rNid === nationalId || altIds.includes(nationalId)) {
                                 foundReport = r;
                                 break;
                             }
@@ -1562,12 +1564,12 @@ app.post('/api/inquiry', async (req, res) => {
         if (foundReport) {
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
             const rData = foundReport.data || {};
-            const isCompanion = (foundReport.type === 'companion' || foundReport.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
+            const isCompanion = (foundReport.type === 'companion' || foundReport.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0) || (foundReport.companionName && foundReport.companionName.trim().length > 0));
             const formatted = {
                 id: foundReport.id || leaveId,
                 serviceCode: foundReport.id || leaveId,
                 nationalId: rData.national_id || foundReport.national_id || nationalId,
-                type: foundReport.type || (isCompanion ? 'companion' : 'sickleave'),
+                type: isCompanion ? 'companion' : (foundReport.type || 'sickleave'),
                 name: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || rData.patient_name_en || '',
                 patientName: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || '',
                 companionName: rData.escort_name_ar || foundReport.companionName || '',
@@ -2112,8 +2114,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
   .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #293C73; word-break: keep-all; }
   .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #293C73; word-break: keep-all; }
   .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; word-break: keep-all; }
-  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
-  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 13.2px; font-weight: bold; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
+  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
+  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
   .dur-row td { background-color: #1F3864 !important; color: white; border: 1.3px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
   .dur-label { font-weight: bold; font-size: 13px; }
   tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }

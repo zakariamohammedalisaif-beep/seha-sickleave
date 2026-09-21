@@ -828,7 +828,7 @@
                 if (result.success && result.report) {
                     const rep = result.report;
                     const rData = rep.data || {};
-                    const isCompanion = (rep.type === 'companion' || rep.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
+                    const isCompanion = (rep.type === 'companion' || rep.type === 'companion_review' || (rep.companionName && rep.companionName.trim().length > 0) || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
 
                     // Patient Name (الاسم:)
                     document.getElementById('rName').innerText = rep.patientName || rep.name || rData.patient_name_ar || '-';
@@ -893,7 +893,7 @@
             document.getElementById('initialButtons').style.display = 'block';
 
             // Reset field text values to blank placeholders
-            ['rName', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rDoctorName', 'rJobTitle'].forEach(id => {
+            ['rName', 'rEscortName', 'rRelation', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rDoctorName', 'rJobTitle'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerText = '--';
             });
