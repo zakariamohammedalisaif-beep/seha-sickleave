@@ -1471,24 +1471,25 @@ app.post('/api/inquiry', async (req, res) => {
         }
 
         if (foundReport) {
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
             const rData = foundReport.data || {};
             const isCompanion = (foundReport.type === 'companion' || foundReport.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
             const formatted = {
                 id: foundReport.id || leaveId,
                 serviceCode: foundReport.id || leaveId,
-                nationalId: rData.national_id || nationalId,
+                nationalId: rData.national_id || foundReport.national_id || nationalId,
                 type: foundReport.type || (isCompanion ? 'companion' : 'sickleave'),
-                name: rData.patient_name_ar || foundReport.patientName || rData.patient_name_en || '',
-                patientName: rData.patient_name_ar || foundReport.patientName || '',
-                companionName: rData.escort_name_ar || '',
-                relation: rData.relation_ar || '',
-                issueDate: rData.issue_date || foundReport.issueDate || '',
-                startDate: rData.admission_date || rData.start_date || '',
-                endDate: rData.discharge_date || rData.end_date || '',
-                duration: String(rData.duration || '1'),
-                doctorName: rData.doctor_name_ar || rData.doctor_name || '',
-                jobTitle: rData.job_title_ar || rData.position || '',
-                hospital: rData.hospital_ar || '',
+                name: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || rData.patient_name_en || '',
+                patientName: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || '',
+                companionName: rData.escort_name_ar || foundReport.companionName || '',
+                relation: rData.relation_ar || foundReport.relation || '',
+                issueDate: rData.issue_date || foundReport.issue_date || foundReport.issueDate || '',
+                startDate: rData.admission_date || rData.start_date || rData.admissionG || foundReport.startDate || '',
+                endDate: rData.discharge_date || rData.end_date || rData.dischargeG || foundReport.endDate || '',
+                duration: String(rData.duration || foundReport.duration || '1'),
+                doctorName: rData.doctor_name_ar || rData.doctor_name || rData.doctorAr || foundReport.doctorName || '',
+                jobTitle: rData.job_title_ar || rData.position || rData.job_title || foundReport.jobTitle || 'طبيب عام',
+                hospital: rData.hospital_ar || foundReport.hospital || '',
                 data: rData
             };
             res.json({ success: true, report: formatted });

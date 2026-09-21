@@ -148,7 +148,7 @@
 
         .form-input {
             width: 100%;
-            height: 52px;
+            height: 50px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             padding: 0 16px;
@@ -161,6 +161,8 @@
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
             font-family: inherit;
+            user-select: text !important;
+            -webkit-user-select: text !important;
         }
 
         .form-input:focus {
@@ -175,10 +177,15 @@
             text-align: right;
         }
 
-        .form-input:disabled {
+        .form-input:disabled,
+        .form-input[readonly] {
             background-color: #f8fafc;
             color: #1e293b;
-            cursor: default;
+            cursor: text;
+            user-select: all !important;
+            -webkit-user-select: all !important;
+            -moz-user-select: all !important;
+            -ms-user-select: all !important;
         }
 
         /* Buttons */
@@ -211,15 +218,19 @@
             cursor: not-allowed;
         }
 
-        /* Result Card (exact match with media_1789516741334.png) */
+        /* Result Card (exact match with media_1789957969376.png) */
         .result-card {
-            background-color: #f3f4f6;
-            border-radius: 14px;
+            background-color: #f4f5f7;
+            border-radius: 16px;
             padding: 26px 20px;
             margin: 22px 0 28px 0;
             text-align: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
             animation: fadeIn 0.3s ease-out;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
         }
 
         @keyframes fadeIn {
@@ -229,6 +240,10 @@
 
         .result-item {
             margin-bottom: 16px;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
         }
 
         .result-item:last-child {
@@ -240,13 +255,22 @@
             font-weight: 800;
             color: #111827;
             margin-bottom: 3px;
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
         }
 
         .result-val {
             font-size: 14.5px;
             font-weight: 500;
             color: #374151;
-            word-break: break-word;
+            user-select: all !important;
+            -webkit-user-select: all !important;
+            -moz-user-select: all !important;
+            -ms-user-select: all !important;
+            word-break: normal;
+            overflow-wrap: normal;
         }
 
         /* Status & Alert Messages */
@@ -560,10 +584,10 @@
         <!-- Form Inputs -->
         <div class="form-section">
             <div class="input-group">
-                <input type="text" id="serviceCode" class="form-input" placeholder="رمز الخدمة" autocomplete="off" spellcheck="false">
+                <input type="text" id="serviceCode" class="form-input" placeholder="رمز الخدمة" autocomplete="off" spellcheck="false" onclick="if(this.readOnly){this.select();}" onfocus="if(this.readOnly){this.select();}">
             </div>
             <div class="input-group">
-                <input type="text" id="nationalId" class="form-input" placeholder="رقم الهوية / الإقامة" autocomplete="off" spellcheck="false">
+                <input type="text" id="nationalId" class="form-input" placeholder="رقم الهوية / الإقامة" autocomplete="off" spellcheck="false" onclick="if(this.readOnly){this.select();}" onfocus="if(this.readOnly){this.select();}">
             </div>
         </div>
 
@@ -733,8 +757,9 @@
         <div class="chat-widget-subtext">Powered by ElevenLabs Agents</div>
     </div>
 
-    <!-- Inquiry Script -->
     <script>
+        let isSubmitting = false;
+
         function normalizeDigits(str) {
             if (!str) return '';
             return String(str)
@@ -760,13 +785,23 @@
         }
 
         function showLoading(show) {
-            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
-            document.getElementById('btnInquire').disabled = show;
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.style.display = show ? 'block' : 'none';
+            const btn = document.getElementById('btnInquire');
+            if (btn) {
+                btn.disabled = show;
+                btn.innerText = show ? '⏳ جاري الاستعلام...' : 'استعلام';
+            }
         }
 
         async function handleInquiry() {
-            const rawCode = document.getElementById('serviceCode').value;
-            const rawNid = document.getElementById('nationalId').value;
+            if (isSubmitting) return;
+
+            const sCodeInput = document.getElementById('serviceCode');
+            const nIdInput = document.getElementById('nationalId');
+
+            const rawCode = sCodeInput.value;
+            const rawNid = nIdInput.value;
 
             const serviceCode = normalizeCode(rawCode);
             const nationalId = normalizeDigits(rawNid);
@@ -778,6 +813,7 @@
                 return;
             }
 
+            isSubmitting = true;
             showLoading(true);
 
             try {
@@ -788,7 +824,6 @@
                 });
 
                 const result = await response.json();
-                showLoading(false);
 
                 if (result.success && result.report) {
                     const rep = result.report;
@@ -796,14 +831,14 @@
                     const isCompanion = (rep.type === 'companion' || rep.type === 'companion_review' || (rData.escort_name_ar && rData.escort_name_ar.trim().length > 0));
 
                     // Patient Name (الاسم:)
-                    document.getElementById('rName').innerText = rData.patient_name_ar || rep.patientName || rep.name || '-';
+                    document.getElementById('rName').innerText = rep.patientName || rep.name || rData.patient_name_ar || '-';
 
                     // Companion Name & Relation (Shown for companion reports matching Screenshot 2)
                     const escortItem = document.getElementById('rEscortNameItem');
                     const relationItem = document.getElementById('rRelationItem');
                     if (isCompanion) {
-                        document.getElementById('rEscortName').innerText = rData.escort_name_ar || rep.companionName || '-';
-                        document.getElementById('rRelation').innerText = rData.relation_ar || rep.relation || '-';
+                        document.getElementById('rEscortName').innerText = rep.companionName || rData.escort_name_ar || '-';
+                        document.getElementById('rRelation').innerText = rep.relation || rData.relation_ar || '-';
                         escortItem.style.display = 'block';
                         relationItem.style.display = 'block';
                     } else {
@@ -816,11 +851,11 @@
                     document.getElementById('rEndDate').innerText = rep.endDate || rData.discharge_date || '-';
                     document.getElementById('rDuration').innerText = rep.duration || rData.duration || '1';
                     document.getElementById('rDoctorName').innerText = rep.doctorName || rData.doctor_name_ar || '-';
-                    document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || '-';
+                    document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || 'طبيب عام';
 
-                    // Lock inputs as disabled (matching Screenshot 2)
-                    document.getElementById('serviceCode').disabled = true;
-                    document.getElementById('nationalId').disabled = true;
+                    // Set inputs to readOnly (NOT disabled, so users can long-press and copy text completely)
+                    sCodeInput.readOnly = true;
+                    nIdInput.readOnly = true;
 
                     // Toggle visibility to show result card and change buttons
                     document.getElementById('resultCard').style.display = 'block';
@@ -833,19 +868,20 @@
                     showAlert(result.error || 'التقرير غير موجود أو البيانات غير متطابقة.');
                 }
             } catch (err) {
+                showAlert('حدث خطأ في الاتصال بالخدمة أو انقطاع في الشبكة. يرجى المحاولة لاحقاً.');
+            } finally {
+                isSubmitting = false;
                 showLoading(false);
-                showAlert('حدث خطأ في الاتصال بالخدمة. يرجى المحاولة لاحقاً.');
             }
         }
 
         function handleNewInquiry() {
             hideAlert();
-            // Unlock and clear inputs
             const sCode = document.getElementById('serviceCode');
             const nId = document.getElementById('nationalId');
             
-            sCode.disabled = false;
-            nId.disabled = false;
+            sCode.readOnly = false;
+            nId.readOnly = false;
             sCode.value = '';
             nId.value = '';
 
@@ -856,7 +892,7 @@
             document.getElementById('resultButtons').style.display = 'none';
             document.getElementById('initialButtons').style.display = 'block';
 
-            // Clean URL query parameters
+            // Clean URL query parameters if present
             if (window.history.replaceState) {
                 window.history.replaceState(null, '', window.location.pathname);
             }
@@ -868,47 +904,17 @@
             handleNewInquiry();
         }
 
-        // On Page Load: Check URL query parameters or hash parameters
+        // On Page Load: Inputs start completely empty with manual typing or pasting only
         document.addEventListener('DOMContentLoaded', () => {
-            const url = new URL(window.location.href);
-            let id = url.searchParams.get('id') || url.searchParams.get('serviceCode') || url.searchParams.get('leaveId') || '';
-            let nin = url.searchParams.get('nin') || url.searchParams.get('nid') || url.searchParams.get('nationalId') || '';
-
-            // If not found in query string, check URL hash (e.g. #/inquiries/slenquiry?id=...&nin=...)
-            if ((!id || !nin) && window.location.hash) {
-                const hashPart = window.location.hash;
-                const qIdx = hashPart.indexOf('?');
-                if (qIdx !== -1) {
-                    const hashParams = new URLSearchParams(hashPart.substring(qIdx));
-                    id = id || hashParams.get('id') || hashParams.get('serviceCode') || hashParams.get('leaveId') || '';
-                    nin = nin || hashParams.get('nin') || hashParams.get('nid') || hashParams.get('nationalId') || '';
-                }
-            }
-
             const sCode = document.getElementById('serviceCode');
             const nId = document.getElementById('nationalId');
             if (sCode) {
-                if (id) {
-                    sCode.value = id.trim();
-                } else {
-                    sCode.value = '';
-                }
-                sCode.disabled = false;
+                sCode.value = '';
+                sCode.readOnly = false;
             }
             if (nId) {
-                if (nin) {
-                    nId.value = nin.trim();
-                } else {
-                    nId.value = '';
-                }
-                nId.disabled = false;
-            }
-
-            // If both ID and NIN are present in URL (e.g. from QR scan), auto-inquire
-            if (id && nin) {
-                handleInquiry();
-            } else if (id && nId) {
-                nId.focus();
+                nId.value = '';
+                nId.readOnly = false;
             }
         });
     </script>
