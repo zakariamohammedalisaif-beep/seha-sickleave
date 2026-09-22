@@ -550,9 +550,16 @@
                         <small style="color:#8899AA; display:block; margin-top:8px; font-size:13px;">يفضل صورة بخلفية شفافة (PNG) بحجم أقل من 2MB</small>
                     </div>
 
-                    <div class="custom-checkbox-wrapper">
-                        <label for="include_qr" style="margin: 0; font-size: 16px; color: #112233; cursor: pointer;">إضافة باركود (QR Code) للتقرير</label>
-                        <input type="checkbox" id="include_qr" class="custom-checkbox-input" checked>
+                    <div class="form-group" style="text-align: right; margin-top: 22px; margin-bottom: 25px;">
+                        <label style="display:block; margin-bottom:8px; color:#112233; font-size: 16px; font-weight: bold;">الباركود (QR Code)</label>
+                        <div class="custom-radio-group">
+                            <label class="custom-radio-label">
+                                <input type="radio" name="barcode_option" id="barcode_option_yes" value="yes" class="custom-radio-input" checked> إضافة باركود
+                            </label>
+                            <label class="custom-radio-label">
+                                <input type="radio" name="barcode_option" id="barcode_option_no" value="no" class="custom-radio-input"> بدون باركود
+                            </label>
+                        </div>
                     </div>
 
                     <div class="custom-actions-dual">

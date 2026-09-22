@@ -1499,10 +1499,14 @@ const app = {
         fabMain.classList.toggle('active');
     },
 
-    startForm(type) {
+    startForm(type, isEdit = false) {
         this.toggleFab();
         this.state.leaveType = type;
         this.state.currentStep = 1;
+        if (!isEdit) {
+            this.state.currentReportId = null;
+            this.state.isEditMode = false;
+        }
         
         let title = 'إصدار تقرير جديد';
         if (type === 'sickleave') title = 'إصدار تقرير إجازة مرضية';
@@ -1510,6 +1514,12 @@ const app = {
         else if (type === 'companion_review') title = 'إصدار مشهد مراجعة لمرافق';
         else if (type === 'patient_review') title = 'إصدار مشهد مراجعة';
         document.getElementById('form-title').innerText = title;
+
+        const submitBtn = document.getElementById('btn-submit-report');
+        if (submitBtn) submitBtn.innerText = 'إصدار التقرير';
+
+        const yesRadio = document.getElementById('barcode_option_yes');
+        if (yesRadio) yesRadio.checked = true;
         
         const typeSelect = document.getElementById('leave_type');
         typeSelect.innerHTML = '<option value="GSL">GSL</option><option value="PSL">PSL</option>';
@@ -1738,29 +1748,103 @@ const app = {
     },
 
     editReport(id) {
-        const report = this.state.reports.find(r => r.id === id);
-        if(!report || !report.data) {
-            this.showToast('عذراً، بيانات هذا التقرير القديم غير متوفرة للتعديل.', 'error');
+        const report = this.state.reports.find(r => (r.id === id || r.report_id === id || r.service_code === id));
+        if (!report) {
+            this.showToast('عذراً، بيانات هذا التقرير غير متوفرة للتعديل.', 'error');
             return;
         }
         
-        this.startForm(report.type);
+        const repType = report.type || (report.data && report.data.type) || 'sickleave';
+        const normalizedType = repType === 'sick' ? 'sickleave' : repType;
         
-        // Populate fields
-        for (const [key, value] of Object.entries(report.data)) {
-            const el = document.getElementById(key);
-            if(el && key !== 'hospital_type') {
-                el.value = value || '';
-            }
+        this.startForm(normalizedType, true);
+        this.state.currentReportId = report.id || report.report_id || report.service_code || id;
+        this.state.isEditMode = true;
+        
+        // Update header & submit button
+        const formTitle = document.getElementById('form-title');
+        if (formTitle) formTitle.innerText = `تعديل التقرير (${this.state.currentReportId})`;
+        const submitBtn = document.getElementById('btn-submit-report');
+        if (submitBtn) submitBtn.innerText = 'حفظ التعديل';
+
+        const data = report.data || {};
+        
+        // 1. Leave Type
+        if (document.getElementById('leave_type')) {
+            const code = report.service_code || report.id || '';
+            document.getElementById('leave_type').value = code.startsWith('PSL') ? 'PSL' : 'GSL';
         }
+
+        const setVal = (elId, val) => {
+            const el = document.getElementById(elId);
+            if (el && val != null && val !== undefined) el.value = val;
+        };
+
+        // 2. Dates & Times
+        const adm = data.admission_date || report.admission_date || report.startDate || '';
+        const dis = data.discharge_date || report.discharge_date || report.endDate || '';
+        const dur = data.duration || report.duration || '1';
+        const issD = data.issue_date || report.issue_date || report.issueDate || '';
+        const issT = data.issue_time || report.issue_time || '';
+
+        setVal('admission_date', adm);
+        setVal('discharge_date', dis);
+        setVal('duration', dur);
+        setVal('issue_date', issD);
+        setVal('issue_time', issT);
+
+        // Review specific fields
+        setVal('cr_admission_date', adm);
+        setVal('cr_discharge_date', dis);
+        setVal('cr_duration', dur);
+        setVal('admission_time', data.admission_time || data.admissionTime || '08:23');
+        setVal('discharge_time', data.discharge_time || data.dischargeTime || '09:23');
+        setVal('waiting_period', data.waiting_period || data.waitingPeriod || '');
+        setVal('visit_type', data.visit_type || data.visitType || 'عيادات');
+        setVal('visit_type_en', data.visit_type_en || data.visitTypeEn || 'OutPatient');
+
+        // 3. Patient Info
+        setVal('patient_name_ar', data.patient_name_ar || report.patient_name || report.patientName || '');
+        setVal('patient_name_en', data.patient_name_en || '');
+        setVal('national_id', data.national_id || report.national_id || '');
+        setVal('nationality', data.nationality || 'السعودية');
+        setVal('employer', data.employer || '');
+
+        // 4. Escort Info (Companion)
+        setVal('escort_name_ar', data.escort_name_ar || report.companionName || '');
+        setVal('escort_name_en', data.escort_name_en || '');
+        setVal('relation_ar', data.relation_ar || report.relation || '');
+        setVal('relation_en', data.relation_en || '');
+
+        // 5. Doctor Info
+        setVal('doctor_name_ar', data.doctor_name_ar || report.doctorName || '');
+        setVal('doctor_name_en', data.doctor_name_en || '');
+        setVal('job_title_ar', data.job_title_ar || report.jobTitle || 'طبيب عام');
+        setVal('job_title_en', data.job_title_en || 'General');
+
+        // 6. Hospital Info
+        setVal('hospital_ar', data.hospital_ar || report.hospital || '');
+        setVal('hospital_en', data.hospital_en || '');
         
-        // Radio button
-        if(report.data.hospital_type) {
-            const radio = document.querySelector(`input[name="hospital_type"][value="${report.data.hospital_type}"]`);
-            if(radio) {
+        if (data.hospital_type) {
+            const radio = document.querySelector(`input[name="hospital_type"][value="${data.hospital_type}"]`);
+            if (radio) {
                 radio.checked = true;
                 this.toggleLicense();
             }
+        }
+        if (data.license_number) {
+            setVal('license_number', data.license_number);
+        }
+
+        // 7. Barcode Option
+        const hasBarcode = (data.include_qr !== false && data.includeQr !== false && report.include_qr !== false);
+        const yesRadio = document.getElementById('barcode_option_yes');
+        const noRadio = document.getElementById('barcode_option_no');
+        if (hasBarcode) {
+            if (yesRadio) yesRadio.checked = true;
+        } else {
+            if (noRadio) noRadio.checked = true;
         }
     },
 
@@ -2056,6 +2140,10 @@ const app = {
             reportDataPayload.visitTypeEn = visitTypeEnVal;
         }
 
+        const includeQr = document.querySelector('input[name="barcode_option"]:checked')?.value !== 'no';
+        reportDataPayload.include_qr = includeQr;
+        reportDataPayload.includeQr = includeQr;
+
         try {
             // SERVER-SIDE ATOMIC GENERATION & STORAGE (Rule 1 & Rule 14)
             const res = await fetch('/api/generate-native-pdf', {
@@ -2065,7 +2153,8 @@ const app = {
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
                     filename: type === 'companion' ? 'Patient_Companion_Report.pdf' : (type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : (type === 'patient_review' ? 'Statement_of_Visit.pdf' : 'sickLeaves.pdf')),
-                    reportId: reportId
+                    reportId: reportId,
+                    isUpdate: Boolean(this.state.isEditMode)
                 })
             });
             
@@ -2085,7 +2174,13 @@ const app = {
             app.updateDashboardUI();
             app.renderReports();
 
+            const wasEdit = Boolean(this.state.isEditMode);
+            this.state.currentReportId = null;
+            this.state.isEditMode = false;
             document.getElementById('report-form').reset();
+            if (wasEdit) {
+                this.showToast('تم تعديل التقرير وحفظه بنجاح!');
+            }
             app.navigate('success');
 
         } catch(e) {

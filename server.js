@@ -1904,14 +1904,7 @@ app.post('/api/report/:chatId', async (req, res) => {
             const isUpdate = (index >= 0);
             
             if (isUpdate) {
-                const existingReport = userSub.reports[index];
-                if (existingReport.issueDate) {
-                    const issueDateObj = new Date(existingReport.issueDate);
-                    const now = new Date();
-                    if ((now - issueDateObj) > (2 * 24 * 60 * 60 * 1000)) {
-                        return res.status(403).json({ success: false, error: 'لا يمكن تعديل التقرير بعد مرور يومين من تاريخ إصداره.' });
-                    }
-                }
+                // Allow report editing anytime
             }
             
             const paySource = userSub.report_payment_source || 'points';
@@ -2632,12 +2625,14 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       
       <!-- Left: QR Code + Text (Top container 110px aligns text with hospital name) -->
       <div style="width:340px; display:flex; flex-direction:column; align-items:center; padding-right:15px;">
+        ${(d.include_qr !== false && d.includeQr !== false) ? `
         <div style="height:110px; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;">
         </div>
         <p style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:9px;color:#222;font-weight:bold;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:10px;font-weight:bold;text-align:center;margin:0;"><a href="${shortURL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
+        ` : ''}
       </div>
 
       <!-- Center Vertical Divider -->
@@ -2814,7 +2809,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 discharge_time: d.dischargeTime || '',
                 waiting_period: d.waitingPeriod || '',
                 visit_type: d.visitType || '',
-                visit_type_en: (d.visitTypeEn && d.visitTypeEn.trim().length > 0) ? d.visitTypeEn.trim() : (d.visitType ? (d.visitType.includes('طوارئ') ? 'Emergency' : (d.visitType.includes('تنويم') ? 'Inpatient' : (d.visitType.includes('قسم') ? 'Department Visit' : (d.visitType.includes('استشارة') ? 'Medical Consultation' : 'OutPatient')))) : 'OutPatient')
+                visit_type_en: (d.visitTypeEn && d.visitTypeEn.trim().length > 0) ? d.visitTypeEn.trim() : (d.visitType ? (d.visitType.includes('طوارئ') ? 'Emergency' : (d.visitType.includes('تنويم') ? 'Inpatient' : (d.visitType.includes('قسم') ? 'Department Visit' : (d.visitType.includes('استشارة') ? 'Medical Consultation' : 'OutPatient')))) : 'OutPatient'),
+                include_qr: (d.include_qr !== false && d.includeQr !== false)
             }
         });
 
