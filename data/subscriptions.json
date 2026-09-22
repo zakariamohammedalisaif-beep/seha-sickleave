@@ -380,5 +380,47 @@
       "TEST_REP_1789950281662"
     ],
     "reportsCount": 1
+  },
+  "test_edit_user_1790114104158": {
+    "username": "tester_1790114104158",
+    "name": "مستخدم تجربة التعديل",
+    "status": "active",
+    "plan": "points",
+    "points": 20,
+    "reports": [
+      "GSL26090138386"
+    ],
+    "reportsCount": 1,
+    "createdAt": "2026-09-22T21:55:04.159Z",
+    "referredBy": null,
+    "referralsCount": 0,
+    "referralPoints": 0,
+    "balance_points": 20,
+    "daysRemaining": 0,
+    "subscriptionDays": 0,
+    "daysUsed": 0,
+    "report_payment_source": "points",
+    "updatedAt": "2026-09-22T21:55:04.183Z"
+  },
+  "test_edit_user_1790114196684": {
+    "username": "tester_1790114196684",
+    "name": "مستخدم تجربة التعديل",
+    "status": "active",
+    "plan": "points",
+    "points": 20,
+    "reports": [
+      "GSL26090114827"
+    ],
+    "reportsCount": 1,
+    "createdAt": "2026-09-22T21:56:36.685Z",
+    "referredBy": null,
+    "referralsCount": 0,
+    "referralPoints": 0,
+    "balance_points": 20,
+    "daysRemaining": 0,
+    "subscriptionDays": 0,
+    "daysUsed": 0,
+    "report_payment_source": "points",
+    "updatedAt": "2026-09-22T21:56:36.709Z"
   }
 }
