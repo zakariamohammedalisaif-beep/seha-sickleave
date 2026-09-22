@@ -882,6 +882,15 @@
                 <div class="result-label">المدة بالأيام:</div>
                 <div class="result-val" id="rDuration">--</div>
             </div>
+            <!-- Review fields: Waiting Period & Visit Type (Shown ONLY for companion_review and patient_review) -->
+            <div class="result-item" id="rWaitingPeriodItem" style="display: none;">
+                <div class="result-label">فترة الانتظار:</div>
+                <div class="result-val" id="rWaitingPeriod">--</div>
+            </div>
+            <div class="result-item" id="rVisitTypeItem" style="display: none;">
+                <div class="result-label">نوع الزيارة:</div>
+                <div class="result-val" id="rVisitType">--</div>
+            </div>
             <div class="result-item">
                 <div class="result-label">اسم الطبيب:</div>
                 <div class="result-val" id="rDoctorName">--</div>
@@ -1126,6 +1135,24 @@
                     document.getElementById('rStartDate').innerText = rep.startDate || rData.admission_date || rData.admissionG || rep.issueDate || '-';
                     document.getElementById('rEndDate').innerText = rep.endDate || rData.discharge_date || rData.dischargeG || rep.startDate || rep.issueDate || '-';
                     document.getElementById('rDuration').innerText = rep.duration || rData.duration || '1';
+
+                    // Review fields: Waiting Period & Visit Type (Shown ONLY for companion_review and patient_review)
+                    const waitingItem = document.getElementById('rWaitingPeriodItem');
+                    const visitTypeItem = document.getElementById('rVisitTypeItem');
+                    const isReview = (rep.type === 'companion_review' || rep.type === 'patient_review' || rData.type === 'companion_review' || rData.type === 'patient_review' || ((rData.waiting_period && rData.waiting_period.trim().length > 0) || (rData.visit_type && rData.visit_type.trim().length > 0)));
+
+                    if (isReview) {
+                        const waitVal = rep.waitingPeriod || rData.waiting_period || '--';
+                        const vtVal = rep.visitType || rData.visit_type || '--';
+                        if (document.getElementById('rWaitingPeriod')) document.getElementById('rWaitingPeriod').innerText = waitVal;
+                        if (document.getElementById('rVisitType')) document.getElementById('rVisitType').innerText = vtVal;
+                        if (waitingItem) waitingItem.style.display = 'block';
+                        if (visitTypeItem) visitTypeItem.style.display = 'block';
+                    } else {
+                        if (waitingItem) waitingItem.style.display = 'none';
+                        if (visitTypeItem) visitTypeItem.style.display = 'none';
+                    }
+
                     document.getElementById('rDoctorName').innerText = rep.doctorName || rData.doctor_name_ar || rData.doctorAr || rData.docNameAr || '-';
                     document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || rData.positionAr || 'طبيب عام';
 
@@ -1161,15 +1188,17 @@
             sCode.value = '';
             nId.value = '';
 
-            // Hide companion items & results
+            // Hide companion items & review items & results
             document.getElementById('rEscortNameItem').style.display = 'none';
             document.getElementById('rRelationItem').style.display = 'none';
+            if (document.getElementById('rWaitingPeriodItem')) document.getElementById('rWaitingPeriodItem').style.display = 'none';
+            if (document.getElementById('rVisitTypeItem')) document.getElementById('rVisitTypeItem').style.display = 'none';
             document.getElementById('resultCard').style.display = 'none';
             document.getElementById('resultButtons').style.display = 'none';
             document.getElementById('initialButtons').style.display = 'block';
 
             // Reset field text values to blank placeholders
-            ['rName', 'rEscortName', 'rRelation', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rDoctorName', 'rJobTitle'].forEach(id => {
+            ['rName', 'rEscortName', 'rRelation', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rWaitingPeriod', 'rVisitType', 'rDoctorName', 'rJobTitle'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerText = '--';
             });

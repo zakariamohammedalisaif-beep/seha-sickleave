@@ -1571,11 +1571,13 @@ app.post('/api/inquiry', async (req, res) => {
             const resolvedDoctorName = rData.doctor_name_ar || rData.doctorAr || rData.docNameAr || rData.doctor_name || foundReport.doctorName || foundReport.doctorAr || foundReport.docNameAr || 'طبيب عام';
             const resolvedJobTitle = rData.job_title_ar || rData.positionAr || rData.position || rData.job_title || foundReport.jobTitle || 'طبيب عام';
 
+            const resolvedType = foundReport.type || rData.type || (isCompanion ? 'companion' : 'sickleave');
+
             const formatted = {
                 id: foundReport.id || leaveId,
                 serviceCode: foundReport.id || leaveId,
                 nationalId: rData.national_id || foundReport.national_id || nationalId,
-                type: isCompanion ? 'companion' : (foundReport.type || 'sickleave'),
+                type: resolvedType,
                 name: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || rData.patient_name_en || '',
                 patientName: rData.patient_name_ar || foundReport.patient_name || foundReport.patientName || '',
                 companionName: rData.escort_name_ar || foundReport.companionName || '',
@@ -1584,6 +1586,8 @@ app.post('/api/inquiry', async (req, res) => {
                 startDate: resolvedStartDate,
                 endDate: resolvedEndDate,
                 duration: String(rData.duration || foundReport.duration || '1'),
+                waitingPeriod: rData.waiting_period || foundReport.waiting_period || foundReport.waitingPeriod || '',
+                visitType: rData.visit_type || foundReport.visit_type || foundReport.visitType || '',
                 doctorName: resolvedDoctorName,
                 jobTitle: resolvedJobTitle,
                 hospital: rData.hospital_ar || foundReport.hospital || '',
@@ -1670,7 +1674,10 @@ app.all('/api/seha/inquiries/sick-leave-details', async (req, res) => {
                 'Doctor NAME': rData.doctor_name_ar || rData.doctor_name || rData.doctorAr || foundReport.doctorName || '',
                 JobTitle: rData.job_title_ar || rData.position || rData.job_title || foundReport.jobTitle || 'طبيب عام',
                 CompanionName: (isCompanion && (rData.escort_name_ar || foundReport.companionName)) ? (rData.escort_name_ar || foundReport.companionName) : null,
-                Relation: (isCompanion && (rData.relation_ar || foundReport.relation)) ? (rData.relation_ar || foundReport.relation) : null
+                Relation: (isCompanion && (rData.relation_ar || foundReport.relation)) ? (rData.relation_ar || foundReport.relation) : null,
+                WaitingPeriod: rData.waiting_period || foundReport.waiting_period || null,
+                VisitType: rData.visit_type || foundReport.visit_type || null,
+                Type: foundReport.type || rData.type || (isCompanion ? 'companion' : 'sickleave')
             };
 
             return res.json({
