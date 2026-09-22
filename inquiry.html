@@ -700,7 +700,6 @@
             flex-direction: column;
             align-items: center;
             z-index: 9999;
-            user-select: none;
         }
 
         .chat-widget-btn {
@@ -840,10 +839,10 @@
         <!-- Form Inputs -->
         <div class="form-section">
             <div class="input-group">
-                <input type="text" id="serviceCode" class="form-input" placeholder="رمز الخدمة" autocomplete="off" spellcheck="false" onclick="if(this.readOnly){this.select();}" onfocus="if(this.readOnly){this.select();}">
+                <input type="text" id="serviceCode" class="form-input" placeholder="رمز الخدمة" autocomplete="off" spellcheck="false" onclick="if(this.readOnly){this.focus();this.setSelectionRange(0,this.value.length);}" onfocus="if(this.readOnly){this.setSelectionRange(0,this.value.length);}" onpointerdown="if(this.readOnly){this.focus();this.setSelectionRange(0,this.value.length);}">
             </div>
             <div class="input-group">
-                <input type="text" id="nationalId" class="form-input" placeholder="رقم الهوية / الإقامة" autocomplete="off" spellcheck="false" onclick="if(this.readOnly){this.select();}" onfocus="if(this.readOnly){this.select();}">
+                <input type="text" id="nationalId" class="form-input" placeholder="رقم الهوية / الإقامة" autocomplete="off" spellcheck="false" onclick="if(this.readOnly){this.focus();this.setSelectionRange(0,this.value.length);}" onfocus="if(this.readOnly){this.setSelectionRange(0,this.value.length);}" onpointerdown="if(this.readOnly){this.focus();this.setSelectionRange(0,this.value.length);}">
             </div>
         </div>
 
@@ -898,6 +897,10 @@
             <div class="result-item">
                 <div class="result-label">المسمى الوظيفي:</div>
                 <div class="result-val" id="rJobTitle">--</div>
+            </div>
+            <div class="result-item" id="rHospitalItem" style="display: none;">
+                <div class="result-label">المنشأة الصحية:</div>
+                <div class="result-val" id="rHospital">--</div>
             </div>
         </div>
 
@@ -1156,6 +1159,16 @@
                     document.getElementById('rDoctorName').innerText = rep.doctorName || rData.doctor_name_ar || rData.doctorAr || rData.docNameAr || '-';
                     document.getElementById('rJobTitle').innerText = rep.jobTitle || rData.job_title_ar || rData.positionAr || 'طبيب عام';
 
+                    // Healthcare Facility / Hospital (المنشأة الصحية:)
+                    const hospVal = rep.hospital || rData.hospital_ar || rData.hospital_name_ar || rData.facility || '';
+                    const hospItem = document.getElementById('rHospitalItem');
+                    if (hospVal && hospVal.trim().length > 0) {
+                        document.getElementById('rHospital').innerText = hospVal;
+                        if (hospItem) hospItem.style.display = 'block';
+                    } else {
+                        if (hospItem) hospItem.style.display = 'none';
+                    }
+
                     // Set inputs to readOnly (NOT disabled, so users can long-press and copy text completely)
                     sCodeInput.readOnly = true;
                     nIdInput.readOnly = true;
@@ -1193,12 +1206,13 @@
             document.getElementById('rRelationItem').style.display = 'none';
             if (document.getElementById('rWaitingPeriodItem')) document.getElementById('rWaitingPeriodItem').style.display = 'none';
             if (document.getElementById('rVisitTypeItem')) document.getElementById('rVisitTypeItem').style.display = 'none';
+            if (document.getElementById('rHospitalItem')) document.getElementById('rHospitalItem').style.display = 'none';
             document.getElementById('resultCard').style.display = 'none';
             document.getElementById('resultButtons').style.display = 'none';
             document.getElementById('initialButtons').style.display = 'block';
 
             // Reset field text values to blank placeholders
-            ['rName', 'rEscortName', 'rRelation', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rWaitingPeriod', 'rVisitType', 'rDoctorName', 'rJobTitle'].forEach(id => {
+            ['rName', 'rEscortName', 'rRelation', 'rIssueDate', 'rStartDate', 'rEndDate', 'rDuration', 'rWaitingPeriod', 'rVisitType', 'rDoctorName', 'rJobTitle', 'rHospital'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerText = '--';
             });
@@ -1227,6 +1241,27 @@
                 nId.value = '';
                 nId.readOnly = false;
             }
+
+            // Ensure clicking, focusing, or long-pressing readOnly code or ID selects the entire string
+            function setupAutoSelect(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const selectAll = function() {
+                    if (el.readOnly) {
+                        try {
+                            el.focus();
+                            el.setSelectionRange(0, el.value.length);
+                        } catch(e) {
+                            el.select();
+                        }
+                    }
+                };
+                ['focus', 'click', 'mouseup', 'touchend', 'touchstart', 'pointerdown', 'contextmenu'].forEach(evt => {
+                    el.addEventListener(evt, selectAll);
+                });
+            }
+            setupAutoSelect('serviceCode');
+            setupAutoSelect('nationalId');
         });
     </script>
 </body>

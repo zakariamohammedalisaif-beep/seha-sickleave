@@ -14,7 +14,7 @@ let currentAdminToken = null;
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8747259082:AAEOGk2J3Rc_-ry7HHH2nTthvJR_ysJNaQk';
 const PORT = process.env.PORT || 3000;
 const WEB_APP_URL = process.env.RENDER_EXTERNAL_URL || process.env.WEB_APP_URL || 'https://seha-sickleave-1.onrender.com';
-const WEB_APP_URL_CACHED = WEB_APP_URL + '?v=53';
+const WEB_APP_URL_CACHED = `${WEB_APP_URL}/index.html?v=53`;
 // Target URL for PDF QR code & clickable link (matches project inquiry portal)
 const INQUIRY_URL = process.env.INQUIRY_URL || process.env.SHORT_URL || `${WEB_APP_URL}/inquiries/slenquiry`;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'Zakaria_2025';
@@ -46,7 +46,16 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(__dirname));
+// Root handler: direct visits to root serve public inquiry.html; requests with bot parameters serve index.html
+app.get('/', (req, res) => {
+    if (req.query.chatId || req.query.tgWebAppData || req.query.screen || req.query.token) {
+        return res.sendFile(path.join(__dirname, 'index.html'));
+    }
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    return res.sendFile(path.join(__dirname, 'inquiry.html'));
+});
+
+app.use(express.static(__dirname, { index: false }));
 app.use('/assets', express.static(path.join(__dirname, 'الشعارات')));
 app.use('/logos', express.static(path.join(__dirname, 'الشعارات')));
 
@@ -1579,7 +1588,8 @@ app.post('/api/admin/menu-button/sync', async (req, res) => {
 });
 
 // --- Inquiry Endpoints ---
-app.get(['/inquiry', '/verify', '/inquiries/slenquiry', '/slenquiry'], (req, res) => {
+app.get(['/inquiry', '/verify', '/inquiries/slenquiry', '/slenquiry', '/verify.html'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     res.sendFile(path.join(__dirname, 'inquiry.html'));
 });
 
