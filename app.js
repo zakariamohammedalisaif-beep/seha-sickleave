@@ -1498,14 +1498,14 @@ const app = {
         let randMinutes = Math.floor(Math.random() * 60).toString().padStart(2, '0');
         document.getElementById('issue_time').value = `${randHours}:${randMinutes}`;
 
-        // Companion Review Dedicated Visibility and Defaults (Strictly Isolated)
-        const isCompanionReview = (type === 'companion_review');
+        // Review Types (companion_review and patient_review) Dedicated Visibility and Defaults
+        const isReviewType = (type === 'companion_review' || type === 'patient_review');
         const crStep1 = document.getElementById('companion-review-step1-fields');
         const stdDatesRow = document.getElementById('standard-dates-row');
         const durGroup = document.getElementById('duration-group');
         const visitTypeGroup = document.getElementById('visit-type-group');
 
-        if (isCompanionReview) {
+        if (isReviewType) {
             if (crStep1) crStep1.style.display = 'block';
             if (stdDatesRow) stdDatesRow.style.display = 'none';
             if (durGroup) durGroup.style.display = 'none';
@@ -1959,7 +1959,7 @@ const app = {
             relation_en: relEn
         };
 
-        if (type === 'companion_review') {
+        if (type === 'companion_review' || type === 'patient_review') {
             const admTimeVal = document.getElementById('admission_time')?.value || '08:23';
             const disTimeVal = document.getElementById('discharge_time')?.value || '09:23';
             const waitPeriodVal = document.getElementById('waiting_period')?.value || '1 ساعة و -- دقيقة';

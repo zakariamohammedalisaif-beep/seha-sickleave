@@ -2272,6 +2272,86 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <td class="val-ar" dir="rtl">${visitTypePair.ar}</td>
       <td class="label-ar">نوع الزيارة</td>
     </tr>`;
+        } else if (d.type === 'patient_review') {
+            const admTimeVal = d.admissionTime || '08:23';
+            const disTimeVal = d.dischargeTime || '09:23';
+            const admTimeEn = formatTime12En(admTimeVal);
+            const admTimeAr = formatTime12Ar(admTimeVal);
+            const disTimeEn = formatTime12En(disTimeVal);
+            const disTimeAr = formatTime12Ar(disTimeVal);
+            const waitPair = getWaitingPeriodPair(admTimeVal, disTimeVal, d.waitingPeriod);
+            const visitTypePair = mapVisitType(d.visitType || 'عيادات');
+
+            tableRowsHtml = `
+    <tr>
+      <td class="label-en" style="width:150px;">Leave ID</td>
+      <td class="val-id" colspan="2" style="width:424px;">${d.leaveId || ''}</td>
+      <td class="label-ar" style="width:150px;">رمز الإجازة</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Admission Date/Time</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:12px; font-weight:normal;">${d.admissionG || ''} - ${admTimeEn}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${d.admissionH || ''} - ${admTimeAr}</td>
+      <td class="dur-label" style="width:150px;">تاريخ/وقت الدخول</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Discharge Date/Time</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:12px; font-weight:normal;">${d.dischargeG || ''} - ${disTimeEn}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${d.dischargeH || ''} - ${disTimeAr}</td>
+      <td class="dur-label" style="width:150px;">تاريخ/وقت الخروج</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Waiting Period</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:12px; font-weight:normal;">${waitPair.en}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${waitPair.ar}</td>
+      <td class="dur-label" style="width:150px;">فترة الانتظار</td>
+    </tr>
+    <tr>
+      <td class="label-en">Issue Date</td>
+      <td class="val-date" colspan="2">${d.issueDate || ''}</td>
+      <td class="label-ar">تاريخ إصدار التقرير</td>
+    </tr>
+    <tr>
+      <td class="label-en">Name</td>
+      <td class="val-en-name">${d.nameEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.nameAr || ''}</td>
+      <td class="label-ar">الاسم</td>
+    </tr>
+    <tr>
+      <td class="label-en">National ID/Iqama</td>
+      <td class="val-nid" colspan="2">${d.nationalId || ''}</td>
+      <td class="label-ar">رقم الهوية / الإقامة</td>
+    </tr>
+    <tr>
+      <td class="label-en">Nationality</td>
+      <td class="val-en">${d.nationalityEn || 'Saudi Arabia'}</td>
+      <td class="val-ar" dir="rtl">${d.nationalityAr || 'السعودية'}</td>
+      <td class="label-ar">الجنسية</td>
+    </tr>
+    <tr>
+      <td class="label-en">Employer</td>
+      <td class="val-en">${d.employerEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.employerAr || ''}</td>
+      <td class="label-ar">جهة العمل</td>
+    </tr>
+    <tr>
+      <td class="label-en">Practitioner Name</td>
+      <td class="val-en-name">${d.doctorEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.doctorAr || ''}</td>
+      <td class="label-ar">اسم الممارس</td>
+    </tr>
+    <tr>
+      <td class="label-en">Position</td>
+      <td class="val-en">${d.positionEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.positionAr || ''}</td>
+      <td class="label-ar">المسمى الوظيفي</td>
+    </tr>
+    <tr>
+      <td class="label-en">Visit Type</td>
+      <td class="val-en">${visitTypePair.en}</td>
+      <td class="val-ar" dir="rtl">${visitTypePair.ar}</td>
+      <td class="label-ar">نوع الزيارة</td>
+    </tr>`;
         } else {
             tableRowsHtml = `
     <tr>
