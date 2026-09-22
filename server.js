@@ -2097,58 +2097,183 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const isCompanion = !!(d.relationAr || d.relationEn || d.type === 'companion' || d.type === 'companion_review');
         const footerMarginTop = '12px';
 
-        // Build self-contained HTML matching Sehaty platform exactly
-        const html = `<!DOCTYPE html>
-<html lang="ar" dir="ltr">
-<head>
-<meta charset="UTF-8">
-</head>
-<body>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; user-select: text; -webkit-user-select: text; }
-  html { background: #fff !important; }
-  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; user-select: text; -webkit-user-select: text; }
-  @page { size: 794px 1123px; margin: 0; }
-  table { border-spacing: 0; direction: ltr; border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
-  .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 1.3px solid #cccccc; }
-  tr { height: 40px; }
-  td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; user-select: text; -webkit-user-select: text; }
-  .label-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13px; width: 150px; }
-  .label-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13.5px; width: 150px; }
-  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #293C73; word-break: keep-all; }
-  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #293C73; word-break: keep-all; }
-  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #293C73; word-break: keep-all; }
-  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; word-break: keep-all; }
-  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
-  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
-  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.3px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
-  .dur-label { font-weight: bold; font-size: 13px; }
-  tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }
-</style>
-<div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
-  
-  <!-- Header: Seha Logo (left) -->
-  <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
+        const formatTime12En = (tStr) => {
+            if (!tStr) return '';
+            const parts = tStr.split(':');
+            if (parts.length < 2) return tStr;
+            let h = parseInt(parts[0], 10);
+            const m = parts[1].padStart(2, '0');
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            if (h === 0) h = 12;
+            return `${h}:${m} ${ampm}`;
+        };
 
-  <!-- Header: Geometric graphic (right) -->
-  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:38px;right:30px;opacity:0.8;">
-    <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-  </svg>
-  
-  <!-- Header: KSA Calligraphy (center) -->
-  <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
-  
-  <!-- Header: Arabic & English Titles -->
-  <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
-    <h1 style="color:#316DB5;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
-    <h2 style="color:#293C73;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
-  </div>
+        const formatTime12Ar = (tStr) => {
+            if (!tStr) return '';
+            const parts = tStr.split(':');
+            if (parts.length < 2) return tStr;
+            let h = parseInt(parts[0], 10);
+            const m = parts[1].padStart(2, '0');
+            const ampm = h >= 12 ? 'مساءً' : 'صباحاً';
+            h = h % 12;
+            if (h === 0) h = 12;
+            return `${h}:${m} ${ampm}`;
+        };
 
-  <!-- Data Table & Footer Container -->
-  <div style="position:absolute;top:226px;left:35px;width:724px;">
-  <div class="table-wrapper">
-  <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;">
+        const getWaitingPeriodPair = (admTime, disTime, customWaitAr) => {
+            if (!admTime || !disTime) {
+                return {
+                    ar: customWaitAr || '1 ساعة و -- دقيقة',
+                    en: '1 hour and -- mins'
+                };
+            }
+            const [h1, m1] = admTime.split(':').map(Number);
+            const [h2, m2] = disTime.split(':').map(Number);
+            if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) {
+                return {
+                    ar: customWaitAr || '1 ساعة و -- دقيقة',
+                    en: '1 hour and -- mins'
+                };
+            }
+            let totalMins = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (totalMins < 0) totalMins += 24 * 60;
+            
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            
+            if (hrs === 0 && mins === 0) {
+                return { ar: '0 دقيقة', en: '0 mins' };
+            }
+            
+            const minsEnStr = mins > 0 ? `${mins} mins` : '-- mins';
+            const minsArStr = mins > 0 ? `${mins} دقيقة` : '-- دقيقة';
+            
+            let en = '';
+            let ar = '';
+            if (hrs === 0) {
+                en = `${mins} mins`;
+                ar = `${mins} دقيقة`;
+            } else if (hrs === 1) {
+                en = `1 hour and ${minsEnStr}`;
+                ar = `1 ساعة و ${minsArStr}`;
+            } else if (hrs === 2) {
+                en = `2 hours and ${minsEnStr}`;
+                ar = `2 ساعتان و ${minsArStr}`;
+            } else if (hrs >= 3 && hrs <= 10) {
+                en = `${hrs} hours and ${minsEnStr}`;
+                ar = `${hrs} ساعات و ${minsArStr}`;
+            } else {
+                en = `${hrs} hours and ${minsEnStr}`;
+                ar = `${hrs} ساعة و ${minsArStr}`;
+            }
+            
+            return { ar, en };
+        };
+
+        const mapVisitType = (valAr) => {
+            const trimmed = (valAr || '').trim();
+            if (!trimmed || trimmed === 'عيادات' || trimmed === 'عيادات خارجية') {
+                return { ar: trimmed || 'عيادات', en: 'OutPatient' };
+            }
+            if (trimmed === 'طوارئ') {
+                return { ar: 'طوارئ', en: 'Emergency' };
+            }
+            if (trimmed === 'تنويم') {
+                return { ar: 'تنويم', en: 'Inpatient' };
+            }
+            return { ar: trimmed, en: 'OutPatient' };
+        };
+
+        let tableRowsHtml = '';
+        if (d.type === 'companion_review') {
+            const admTimeVal = d.admissionTime || '08:23';
+            const disTimeVal = d.dischargeTime || '09:23';
+            const admTimeEn = formatTime12En(admTimeVal);
+            const admTimeAr = formatTime12Ar(admTimeVal);
+            const disTimeEn = formatTime12En(disTimeVal);
+            const disTimeAr = formatTime12Ar(disTimeVal);
+            const waitPair = getWaitingPeriodPair(admTimeVal, disTimeVal, d.waitingPeriod);
+            const visitTypePair = mapVisitType(d.visitType || 'عيادات');
+
+            tableRowsHtml = `
+    <tr>
+      <td class="label-en" style="width:150px;">Leave ID</td>
+      <td class="val-id" colspan="2" style="width:424px;">${d.leaveId || ''}</td>
+      <td class="label-ar" style="width:150px;">رمز الإجازة</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Admission Date/Time</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:12px; font-weight:normal;">${d.admissionG || ''} - ${admTimeEn}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${d.admissionH || ''} - ${admTimeAr}</td>
+      <td class="dur-label" style="width:150px;">تاريخ/وقت الدخول</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Discharge Date/Time</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:12px; font-weight:normal;">${d.dischargeG || ''} - ${disTimeEn}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${d.dischargeH || ''} - ${disTimeAr}</td>
+      <td class="dur-label" style="width:150px;">تاريخ/وقت الخروج</td>
+    </tr>
+    <tr class="dur-row">
+      <td class="dur-label" style="width:150px;">Waiting Period</td>
+      <td style="width:212px; font-family:'Arial',sans-serif; font-size:12px; font-weight:normal;">${waitPair.en}</td>
+      <td dir="rtl" style="width:212px; font-family:'Tajawal',sans-serif; font-size:12.5px; font-weight:500;">${waitPair.ar}</td>
+      <td class="dur-label" style="width:150px;">فترة الانتظار</td>
+    </tr>
+    <tr>
+      <td class="label-en">Issue Date</td>
+      <td class="val-date" colspan="2">${d.issueDate || ''}</td>
+      <td class="label-ar">تاريخ إصدار التقرير</td>
+    </tr>
+    <tr>
+      <td class="label-en">Companion Name</td>
+      <td class="val-en-name">${d.nameEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.nameAr || ''}</td>
+      <td class="label-ar">اسم المرافق</td>
+    </tr>
+    <tr>
+      <td class="label-en">National ID/Iqama</td>
+      <td class="val-nid" colspan="2">${d.nationalId || ''}</td>
+      <td class="label-ar">رقم الهوية / الإقامة</td>
+    </tr>
+    <tr>
+      <td class="label-en">Nationality</td>
+      <td class="val-en">${d.nationalityEn || 'Saudi Arabia'}</td>
+      <td class="val-ar" dir="rtl">${d.nationalityAr || 'السعودية'}</td>
+      <td class="label-ar">الجنسية</td>
+    </tr>
+    <tr>
+      <td class="label-en">Relation</td>
+      <td class="val-en">${d.relationEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.relationAr || ''}</td>
+      <td class="label-ar">صلة القرابة</td>
+    </tr>
+    <tr>
+      <td class="label-en">Employer</td>
+      <td class="val-en">${d.employerEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.employerAr || ''}</td>
+      <td class="label-ar">جهة العمل</td>
+    </tr>
+    <tr>
+      <td class="label-en">Practitioner Name</td>
+      <td class="val-en-name">${d.doctorEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.doctorAr || ''}</td>
+      <td class="label-ar">اسم الممارس</td>
+    </tr>
+    <tr>
+      <td class="label-en">Position</td>
+      <td class="val-en">${d.positionEn || ''}</td>
+      <td class="val-ar" dir="rtl">${d.positionAr || ''}</td>
+      <td class="label-ar">المسمى الوظيفي</td>
+    </tr>
+    <tr>
+      <td class="label-en">Visit Type</td>
+      <td class="val-en">${visitTypePair.en}</td>
+      <td class="val-ar" dir="rtl">${visitTypePair.ar}</td>
+      <td class="label-ar">نوع الزيارة</td>
+    </tr>`;
+        } else {
+            tableRowsHtml = `
     <tr>
       <td class="label-en" style="width:150px;">Leave ID</td>
       <td class="val-id" colspan="2" style="width:424px;">${d.leaveId || ''}</td>
@@ -2217,7 +2342,62 @@ app.post('/api/generate-native-pdf', async (req, res) => {
       <td class="val-en">${d.positionEn || ''}</td>
       <td class="val-ar" dir="rtl">${d.positionAr || ''}</td>
       <td class="label-ar">المسمى الوظيفى</td>
-    </tr>
+    </tr>`;
+        }
+
+        // Build self-contained HTML matching Sehaty platform exactly
+        const html = `<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+</head>
+<body>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; user-select: text; -webkit-user-select: text; }
+  html { background: #fff !important; }
+  body { margin: 0; padding: 0; background: #fff !important; width: 794px; height: 1123px; overflow: hidden; direction: ltr; user-select: text; -webkit-user-select: text; }
+  @page { size: 794px 1123px; margin: 0; }
+  table { border-spacing: 0; direction: ltr; border-collapse: collapse; width: 100%; text-align: center; table-layout: fixed; }
+  .table-wrapper { width: 724px; border-radius: 12px; overflow: hidden; border: 1.3px solid #cccccc; }
+  tr { height: 40px; }
+  td { font-family: 'Tajawal', 'Arial', sans-serif; vertical-align: middle !important; text-align: center !important; user-select: text; -webkit-user-select: text; }
+  .label-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13px; width: 150px; }
+  .label-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-weight: bold; color: #316DB5; font-size: 13.5px; width: 150px; }
+  .val-en { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; color: #293C73; word-break: keep-all; }
+  .val-en-name { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12px; font-weight: normal; letter-spacing: 0.2px; text-transform: uppercase; color: #293C73; word-break: keep-all; }
+  .val-ar { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 500; color: #293C73; word-break: keep-all; }
+  .val-date { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; word-break: keep-all; }
+  .val-id { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
+  .val-nid { border: 1.3px solid #cccccc; padding: 5px 6px; font-family: 'Arial', sans-serif; font-size: 12.5px; font-weight: normal; color: #293C73; white-space: nowrap; letter-spacing: normal; user-select: text; -webkit-user-select: text; word-break: keep-all; }
+  .dur-row td { background-color: #1F3864 !important; color: white; border: 1.3px solid #cccccc; padding: 5px 4px; white-space: nowrap; }
+  .dur-label { font-weight: bold; font-size: 13px; }
+  tr:nth-child(even):not(.dur-row) td { background-color: #f7f7f7; }
+</style>
+<div style="width:794px;height:1123px;background:#fff;font-family:'Tajawal','Arial',sans-serif;position:relative;overflow:hidden;direction:ltr;">
+  
+  <!-- Header: Seha Logo (left) -->
+  <img src="${sehaLogo}" style="position:absolute;top:32px;left:38px;width:155px;height:auto;">
+
+  <!-- Header: Geometric graphic (right) -->
+  <svg width="195" height="92" viewBox="0 0 408 192" style="position:absolute;top:38px;right:30px;opacity:0.8;">
+    <path d="M 0,0 L 44,28 L 56,109 L 91,2 L 116,59 L 56,109 M 56,109 L 113,124 L 116,59 M 116,59 L 154,1 M 116,59 L 229,44 L 327,96 M 116,59 L 201,74 L 327,96 M 113,124 L 201,74 L 229,44 M 213,1 L 229,44 M 241,1 L 327,96 M 324,1 L 327,96 M 327,96 L 386,1 L 404,190 L 327,96" stroke="#9cb1cd" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>
+  
+  <!-- Header: KSA Calligraphy (center) -->
+  <img src="${ksaCalligraphy}" style="position:absolute;top:68px;left:50%;transform:translateX(-50%);width:190px;height:auto;">
+  
+  <!-- Header: Arabic & English Titles -->
+  <div style="position:absolute;top:168px;left:0;width:794px;text-align:center;">
+    <h1 style="color:#316DB5;font-size:21px;font-weight:bold;font-family:'Tajawal',sans-serif;margin:0 0 3px 0;line-height:1.2;">${d.titleAr || 'تقرير إجازة مرضية'}</h1>
+    <h2 style="color:#293C73;font-size:16.5px;font-weight:bold;font-family:'Times New Roman',Georgia,serif;margin:0;letter-spacing:0.2px;line-height:1.2;">${d.titleEn || 'Sick Leave Report'}</h2>
+  </div>
+
+  <!-- Data Table & Footer Container -->
+  <div style="position:absolute;top:226px;left:35px;width:724px;">
+  <div class="table-wrapper">
+  <table style="width:100%;border-collapse:collapse;text-align:center;table-layout:fixed;">
+    ${tableRowsHtml}
   </table>
   </div>
 
@@ -2406,7 +2586,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 license_number: d.licenseNumber || d.license_number || '',
                 leaveId: sanitizedLeaveId,
                 service_code: sanitizedLeaveId,
-                short_url: shortURL
+                short_url: shortURL,
+                admission_time: d.admissionTime || '',
+                discharge_time: d.dischargeTime || '',
+                waiting_period: d.waitingPeriod || '',
+                visit_type: d.visitType || ''
             }
         });
 

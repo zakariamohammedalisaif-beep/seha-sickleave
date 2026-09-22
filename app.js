@@ -1496,6 +1496,89 @@ const app = {
         let randHours = Math.floor(Math.random() * 24).toString().padStart(2, '0');
         let randMinutes = Math.floor(Math.random() * 60).toString().padStart(2, '0');
         document.getElementById('issue_time').value = `${randHours}:${randMinutes}`;
+
+        // Companion Review Dedicated Visibility and Defaults (Strictly Isolated)
+        const isCompanionReview = (type === 'companion_review');
+        const crStep1 = document.getElementById('companion-review-step1-fields');
+        const stdDatesRow = document.getElementById('standard-dates-row');
+        const durGroup = document.getElementById('duration-group');
+        const visitTypeGroup = document.getElementById('visit-type-group');
+
+        if (isCompanionReview) {
+            if (crStep1) crStep1.style.display = 'block';
+            if (stdDatesRow) stdDatesRow.style.display = 'none';
+            if (durGroup) durGroup.style.display = 'none';
+            if (visitTypeGroup) visitTypeGroup.style.display = 'block';
+
+            if (document.getElementById('cr_admission_date')) document.getElementById('cr_admission_date').value = todayStr;
+            if (document.getElementById('cr_discharge_date')) document.getElementById('cr_discharge_date').value = todayStr;
+            if (document.getElementById('admission_time')) document.getElementById('admission_time').value = '08:23';
+            if (document.getElementById('discharge_time')) document.getElementById('discharge_time').value = '09:23';
+            this.calcWaitingTime();
+            if (document.getElementById('visit_type')) document.getElementById('visit_type').value = 'عيادات';
+        } else {
+            if (crStep1) crStep1.style.display = 'none';
+            if (stdDatesRow) stdDatesRow.style.display = 'flex';
+            if (durGroup) durGroup.style.display = 'block';
+            if (visitTypeGroup) visitTypeGroup.style.display = 'none';
+        }
+    },
+
+    syncCrDates() {
+        const crAdm = document.getElementById('cr_admission_date')?.value;
+        const crDis = document.getElementById('cr_discharge_date')?.value;
+        if (crAdm) document.getElementById('admission_date').value = crAdm;
+        if (crDis) document.getElementById('discharge_date').value = crDis;
+    },
+
+    calcWaitingTime() {
+        const aTime = document.getElementById('admission_time')?.value;
+        const dTime = document.getElementById('discharge_time')?.value;
+        const waitingInput = document.getElementById('waiting_period');
+        if (!waitingInput) return;
+
+        if (!aTime || !dTime) {
+            waitingInput.value = '';
+            return;
+        }
+
+        const aDate = document.getElementById('cr_admission_date')?.value || document.getElementById('admission_date')?.value || '2026-01-01';
+        const dDate = document.getElementById('cr_discharge_date')?.value || document.getElementById('discharge_date')?.value || aDate;
+
+        const d1 = new Date(`${aDate}T${aTime}:00`);
+        const d2 = new Date(`${dDate}T${dTime}:00`);
+
+        let diffMs = d2 - d1;
+        if (isNaN(diffMs)) return;
+        if (diffMs < 0) {
+            diffMs += 24 * 60 * 60 * 1000;
+        }
+
+        const totalMinutes = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        let result = '';
+        if (hours === 0 && minutes === 0) {
+            result = 'أقل من دقيقة';
+        } else {
+            const parts = [];
+            if (hours === 1) parts.push('1 ساعة');
+            else if (hours === 2) parts.push('ساعتان');
+            else if (hours >= 3 && hours <= 10) parts.push(`${hours} ساعات`);
+            else if (hours > 10) parts.push(`${hours} ساعة`);
+
+            if (minutes === 0) {
+                if (hours > 0) parts.push('-- دقيقة');
+            } else if (minutes === 1) parts.push('دقيقة واحدة');
+            else if (minutes === 2) parts.push('دقيقتان');
+            else if (minutes >= 3 && minutes <= 10) parts.push(`${minutes} دقائق`);
+            else if (minutes > 10) parts.push(`${minutes} دقيقة`);
+
+            result = parts.join(' و ');
+        }
+
+        waitingInput.value = result;
     },
 
     syncHospitalEn() {
@@ -1817,7 +1900,7 @@ const app = {
             titleEn = 'Patient Companion Report';
         } else if (type === 'companion_review') {
             titleAr = 'مشهد مراجعة لمرافق';
-            titleEn = 'Companion Attendance Certificate';
+            titleEn = 'Companion Statement of Visit';
         }
 
         const reportDataPayload = {
@@ -1872,6 +1955,18 @@ const app = {
             relation_en: relEn
         };
 
+        if (type === 'companion_review') {
+            const admTimeVal = document.getElementById('admission_time')?.value || '08:23';
+            const disTimeVal = document.getElementById('discharge_time')?.value || '09:23';
+            const waitPeriodVal = document.getElementById('waiting_period')?.value || '1 ساعة و -- دقيقة';
+            const visitTypeVal = document.getElementById('visit_type')?.value || 'عيادات';
+
+            reportDataPayload.admissionTime = admTimeVal;
+            reportDataPayload.dischargeTime = disTimeVal;
+            reportDataPayload.waitingPeriod = waitPeriodVal;
+            reportDataPayload.visitType = visitTypeVal;
+        }
+
         try {
             // SERVER-SIDE ATOMIC GENERATION & STORAGE (Rule 1 & Rule 14)
             const res = await fetch('/api/generate-native-pdf', {
@@ -1880,7 +1975,7 @@ const app = {
                 body: JSON.stringify({
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
-                    filename: 'sickLeaves.pdf',
+                    filename: type === 'companion' ? 'Patient_Companion_Report.pdf' : (type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf'),
                     reportId: reportId
                 })
             });

@@ -327,7 +327,8 @@
                         </select>
                     </div>
                     
-                    <div class="dates-row">
+                    <!-- Standard Dates Row (for sickleave and companion) -->
+                    <div class="dates-row" id="standard-dates-row">
                         <div class="form-group half">
                             <label>تاريخ الدخول</label>
                             <input type="date" id="admission_date" required>
@@ -338,7 +339,35 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <!-- Companion Review ONLY: Dates, Times, and Waiting Period -->
+                    <div id="companion-review-step1-fields" style="display:none;">
+                        <div class="dates-row">
+                            <div class="form-group half">
+                                <label>تاريخ الدخول</label>
+                                <input type="date" id="cr_admission_date" oninput="app.syncCrDates(); app.calcWaitingTime();">
+                            </div>
+                            <div class="form-group half">
+                                <label>ساعة الدخول</label>
+                                <input type="time" id="admission_time" oninput="app.calcWaitingTime();">
+                            </div>
+                        </div>
+                        <div class="dates-row">
+                            <div class="form-group half">
+                                <label>تاريخ الخروج</label>
+                                <input type="date" id="cr_discharge_date" oninput="app.syncCrDates(); app.calcWaitingTime();">
+                            </div>
+                            <div class="form-group half">
+                                <label>ساعة الخروج</label>
+                                <input type="time" id="discharge_time" oninput="app.calcWaitingTime();">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>فترة الانتظار</label>
+                            <input type="text" id="waiting_period" placeholder="فترة الانتظار (تحسب تلقائياً من وقت الدخول والخروج)">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="duration-group">
                         <label>مدة الإجازة (بالأيام)</label>
                         <input type="number" id="duration" value="1" min="1" required>
                     </div>
@@ -435,6 +464,20 @@
                     <div class="form-group">
                         <label>المسمى الوظيفي (إنجليزي)</label>
                         <input type="text" id="job_title_en" value="General" required>
+                    </div>
+
+                    <!-- Companion Review ONLY: Visit Type Field -->
+                    <div class="form-group" id="visit-type-group" style="display:none;">
+                        <label>نوع الزيارة</label>
+                        <input type="text" id="visit_type" list="visit-types-list" value="عيادات" placeholder="اختر أو اكتب نوع الزيارة..." autocomplete="off">
+                        <datalist id="visit-types-list">
+                            <option value="عيادات">
+                            <option value="عيادات خارجية">
+                            <option value="طوارئ">
+                            <option value="تنويم">
+                            <option value="مراجعة قسم">
+                            <option value="استشارة طبية">
+                        </datalist>
                     </div>
 
                     <div class="form-group">
