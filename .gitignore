@@ -6,12 +6,13 @@ temp_scratch_backup/
 .env
 *.tmp*
 data/*.tmp*
-
-# Persistent production database files (must never be tracked in git)
-subscriptions.json
+# Keep temp files and scratch ignored
 subscriptions.backup*.json
 migration_pre_metrics.json
-data/subscriptions.json
-data/reports.json
-data/transactions.json
-data/metadata.json
+backup_*/
+test_*.js
+test_*.png
+screenshot_*.png
+inquiry_*_verified.pngverify_production_inquiry.js
+verify_production_inquiry.js
+*.png

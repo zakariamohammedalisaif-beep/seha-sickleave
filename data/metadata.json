@@ -1,0 +1,10 @@
+{
+  "migration_version": 1,
+  "migrated_at": "2026-09-20T22:32:50.643Z",
+  "metrics": {
+    "subscribers": 1,
+    "reports": 1,
+    "transactions": 13,
+    "points": 10000
+  }
+}

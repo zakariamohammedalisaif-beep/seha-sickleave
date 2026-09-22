@@ -777,6 +777,20 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Section: Delete Subscriber (Explicit Admin Action) -->
+                <div class="admin-modal-subgroup" style="border-color:#fecaca; background:#fff1f2;">
+                    <h4 style="color:#991b1b;">🗑️ حذف المشترك</h4>
+                    <p style="font-size:0.8rem; color:#666; margin-bottom:8px;">حذف المشترك نهائياً من قاعدة البيانات (لا يمكن التراجع).</p>
+                    <button type="button" class="btn-danger" id="btn-admin-delete-user" onclick="app.promptDeleteUser()" style="width:100%; background:#dc2626;">🗑️ حذف المشترك من النظام</button>
+                    <div id="admin-delete-confirm-box" style="display:none; margin-top:10px; padding:10px; background:#fff; border-radius:8px; border:1px solid #ef4444;">
+                        <p style="color:#dc2626; font-size:0.85rem; font-weight:bold; margin-bottom:8px;">هل أنت متأكد تماماً من حذف هذا المشترك نهائياً من قاعدة البيانات؟</p>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-danger" id="btn-confirm-delete-user-now" onclick="app.executeDeleteUser(this)" style="flex:1; background:#dc2626;">نعم، احذف المشترك</button>
+                            <button type="button" class="btn-sub-action-sub" onclick="document.getElementById('admin-delete-confirm-box').style.display='none'" style="flex:1;">إلغاء</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="admin-modal-footer">
                 <button type="button" class="btn-secondary" onclick="app.closeAdminModals()" style="width:100%; padding:12px; border-radius:8px; font-weight:600;">إغلاق</button>

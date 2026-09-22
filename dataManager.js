@@ -1,6 +1,114 @@
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
+const https = require('https');
+
+// Automatic GitHub Cloud Persistence (Guarantees data survives Render restarts)
+let gitToken = process.env.GITHUB_TOKEN || '';
+if (!gitToken && fsSync.existsSync(path.join(__dirname, '.git/config'))) {
+    try {
+        const conf = fsSync.readFileSync(path.join(__dirname, '.git/config'), 'utf8');
+        const m = conf.match(/https:\/\/[^:]+:([^@]+)@github\.com/);
+        if (m) gitToken = m[1];
+    } catch (e) {}
+}
+const GITHUB_TOKEN = gitToken;
+const GITHUB_REPO = process.env.GITHUB_REPO || 'zakariamohammedalisaif-beep/seha-sickleave';
+
+function githubApiRequest(method, apiPath, body = null) {
+    return new Promise((resolve, reject) => {
+        const postData = body ? JSON.stringify(body) : null;
+        const options = {
+            hostname: 'api.github.com',
+            path: `/repos/${GITHUB_REPO}${apiPath}`,
+            method: method,
+            headers: {
+                'User-Agent': 'Seha-DataManager-Sync',
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json',
+                ...(postData ? { 'Content-Length': Buffer.byteLength(postData) } : {})
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve({ status: res.statusCode, body: data }));
+        });
+
+        req.on('error', reject);
+        if (postData) req.write(postData);
+        req.end();
+    });
+}
+
+const pushFileToGitHub = async (fullFilePath) => {
+    if (!GITHUB_TOKEN) return;
+    try {
+        if (!fsSync.existsSync(fullFilePath)) return;
+        const relPath = path.relative(__dirname, fullFilePath).replace(/\\/g, '/');
+        if (!relPath.startsWith('data/') && relPath !== 'subscriptions.json') return;
+
+        const fileBuffer = await fs.readFile(fullFilePath);
+        const base64Content = fileBuffer.toString('base64');
+
+        let currentSha = null;
+        try {
+            const getRes = await githubApiRequest('GET', `/contents/${relPath}`);
+            if (getRes.status === 200) {
+                const parsed = JSON.parse(getRes.body);
+                currentSha = parsed.sha;
+                if (parsed.content && parsed.content.replace(/\r?\n/g, '') === base64Content) {
+                    return; // Already identical
+                }
+            }
+        } catch (e) {}
+
+        const putBody = {
+            message: `chore(data): auto-sync ${relPath} [skip ci]`,
+            content: base64Content,
+            branch: 'main'
+        };
+        if (currentSha) putBody.sha = currentSha;
+
+        let putRes = await githubApiRequest('PUT', `/contents/${relPath}`, putBody);
+        if (putRes.status === 409) {
+            // Conflict: fetch fresh sha and retry once
+            try {
+                const freshGet = await githubApiRequest('GET', `/contents/${relPath}`);
+                if (freshGet.status === 200) {
+                    const freshParsed = JSON.parse(freshGet.body);
+                    putBody.sha = freshParsed.sha;
+                    putRes = await githubApiRequest('PUT', `/contents/${relPath}`, putBody);
+                }
+            } catch (retryErr) {}
+        }
+
+        if (putRes.status >= 200 && putRes.status < 300) {
+            console.log(`✓ Auto-synced ${relPath} to GitHub`);
+        } else {
+            console.warn(`GitHub sync status ${putRes.status} for ${relPath}`);
+        }
+    } catch (err) {
+        console.warn(`GitHub auto-sync error for ${fullFilePath}:`, err.message);
+    }
+};
+
+let syncTimeout = null;
+const syncQueue = new Set();
+const scheduleGitHubSync = (filePath) => {
+    if (!GITHUB_TOKEN) return;
+    syncQueue.add(filePath);
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+        const files = Array.from(syncQueue);
+        syncQueue.clear();
+        for (const f of files) {
+            pushFileToGitHub(f).catch(e => console.warn('Sync error:', e.message));
+        }
+    }, 4000);
+};
 
 // Determine Persistent Data Directory
 // On Render, DATA_DIR can be set to the mount path of a Persistent Disk (e.g. /data or /var/data)
@@ -48,6 +156,7 @@ const atomicWriteJson = async (filePath, data) => {
     try {
         await fs.writeFile(tempFile, jsonStr, 'utf-8');
         await fs.rename(tempFile, filePath);
+        scheduleGitHubSync(filePath);
     } catch (err) {
         try {
             if (fsSync.existsSync(tempFile)) {
@@ -465,7 +574,32 @@ class DataManager {
         return withDbLock(async () => {
             const subs = await readJsonSafe(subscriptionsFile, {});
             const chatIdStr = String(chatId);
-            const normalized = normalizeSubscription(userData);
+            const existing = subs[chatIdStr] || {};
+
+            // Strictly preserve existing reports, reportsCount, createdAt, referredBy if not provided or empty
+            const preservedReports = (userData.reports && userData.reports.length > 0) 
+                ? userData.reports 
+                : (existing.reports || []);
+            const preservedCount = (userData.reportsCount != null && userData.reportsCount > 0)
+                ? userData.reportsCount
+                : (existing.reportsCount != null ? existing.reportsCount : preservedReports.length);
+            const preservedCreatedAt = existing.createdAt || userData.createdAt || new Date().toISOString();
+            const preservedReferredBy = (userData.referredBy !== undefined) ? userData.referredBy : (existing.referredBy || null);
+            const preservedReferralsCount = (userData.referralsCount != null) ? userData.referralsCount : (existing.referralsCount || 0);
+            const preservedReferralPoints = (userData.referralPoints != null) ? userData.referralPoints : (existing.referralPoints || 0);
+
+            const merged = {
+                ...existing,
+                ...userData,
+                reports: preservedReports,
+                reportsCount: preservedCount,
+                createdAt: preservedCreatedAt,
+                referredBy: preservedReferredBy,
+                referralsCount: preservedReferralsCount,
+                referralPoints: preservedReferralPoints
+            };
+
+            const normalized = normalizeSubscription(merged);
             normalized.updatedAt = new Date().toISOString();
             subs[chatIdStr] = normalized;
             await atomicWriteJson(subscriptionsFile, subs);
@@ -620,12 +754,54 @@ class DataManager {
     async getUserReports(chatId) {
         return withDbLock(async () => {
             const reports = await readJsonSafe(reportsFile, {});
+            const subs = await readJsonSafe(subscriptionsFile, {});
             const chatIdStr = String(chatId);
             const userReports = [];
 
+            // 1. Gather all reports belonging to chatIdStr from reports.json
             for (const rep of Object.values(reports)) {
                 if (String(rep.chat_id) === chatIdStr) {
                     userReports.push(rep);
+                }
+            }
+
+            // 2. Also check if user has report IDs in subscriptions.json that might be missing from reports.json
+            const user = subs[chatIdStr];
+            if (user && Array.isArray(user.reports)) {
+                let reportsUpdated = false;
+                for (const r of user.reports) {
+                    const rId = typeof r === 'string' ? r : (r.id || r.report_id);
+                    if (rId && !userReports.some(x => x.id === rId || x.report_id === rId)) {
+                        if (reports[rId] && String(reports[rId].chat_id) === chatIdStr) {
+                            userReports.push(reports[rId]);
+                        } else if (typeof r === 'object' && r.id) {
+                            const restoredRep = {
+                                id: r.id,
+                                report_id: r.id,
+                                chat_id: chatIdStr,
+                                username: user.username || null,
+                                patient_name: r.patientName || (r.data && (r.data.patient_name_ar || r.data.patient_name_en)) || '',
+                                national_id: (r.data && r.data.national_id) || r.nationalId || '',
+                                issue_date: r.issueDate || (r.data && r.data.issue_date) || new Date().toISOString().slice(0, 10),
+                                issue_time: (r.data && r.data.issue_time) || '',
+                                type: r.type || 'sick',
+                                service_code: r.service_code || (r.data && r.data.service_code) || r.id,
+                                inquiry_url: r.shortURL || (r.data && r.data.short_url) || '',
+                                short_url: r.shortURL || (r.data && r.data.short_url) || '',
+                                payment_type: user.report_payment_source || 'points',
+                                points_deducted: 0,
+                                status: 'issued',
+                                created_at: r.created_at || new Date().toISOString(),
+                                data: r.data || {}
+                            };
+                            reports[r.id] = restoredRep;
+                            userReports.push(restoredRep);
+                            reportsUpdated = true;
+                        }
+                    }
+                }
+                if (reportsUpdated) {
+                    await atomicWriteJson(reportsFile, reports);
                 }
             }
 

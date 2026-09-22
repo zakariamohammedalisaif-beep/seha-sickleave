@@ -329,12 +329,22 @@ const app = {
             } else if (queryChatId) {
                 this.state.chatId = queryChatId;
             } else {
-                this.state.chatId = "123456789";
+                let guestId = localStorage.getItem('isolated_guest_id');
+                if (!guestId) {
+                    guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                    localStorage.setItem('isolated_guest_id', guestId);
+                }
+                this.state.chatId = guestId;
             }
         } else if (queryChatId) {
             this.state.chatId = queryChatId;
         } else {
-            this.state.chatId = "123456789";
+            let guestId = localStorage.getItem('isolated_guest_id');
+            if (!guestId) {
+                guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                localStorage.setItem('isolated_guest_id', guestId);
+            }
+            this.state.chatId = guestId;
         }
 
         await this.loadLocalData();
@@ -434,13 +444,15 @@ const app = {
 
                 // Fetch user reports from isolated API
                 try {
+                    this.state.reports = [];
                     const repRes = await fetch(`/api/user/${this.state.chatId}/reports`, {
                         headers: { 'Cache-Control': 'no-cache' }
                     });
                     if (repRes.ok) {
                         const repData = await repRes.json();
                         if (repData.success && Array.isArray(repData.reports)) {
-                            this.state.reports = repData.reports;
+                            // Strictly isolate reports to only those belonging to current user
+                            this.state.reports = repData.reports.filter(r => !r.chat_id || String(r.chat_id) === String(this.state.chatId));
                             this.renderReports();
                         }
                     }
@@ -1182,6 +1194,9 @@ const app = {
         
         const confirmBox = document.getElementById('admin-cancel-confirm-box');
         if (confirmBox) confirmBox.style.display = 'none';
+
+        const deleteBox = document.getElementById('admin-delete-confirm-box');
+        if (deleteBox) deleteBox.style.display = 'none';
     },
 
     async adminModifyPoints(action, btn) {
@@ -1328,6 +1343,39 @@ const app = {
                     this.updateUserInState(data.user);
                 } else {
                     this.showToast(data.error || 'فشلت العملية', 'error');
+                }
+            } catch (err) {
+                this.showToast('خطأ في الاتصال: ' + err.message, 'error');
+            }
+        });
+    },
+
+    promptDeleteUser() {
+        const box = document.getElementById('admin-delete-confirm-box');
+        if (box) box.style.display = 'block';
+    },
+
+    async executeDeleteUser(btn) {
+        if (!this.adminState.selectedUser) return;
+        const targetChatId = this.adminState.selectedUser.chatId;
+
+        await this.executeAdminBtn(btn, async () => {
+            try {
+                const res = await fetch('/api/admin/web/user/delete', {
+                    method: 'POST',
+                    headers: this.getAdminHeaders(),
+                    body: JSON.stringify({ chatId: targetChatId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showToast(data.message || 'تم حذف المشترك بنجاح', 'success');
+                    // Remove from local admin users state
+                    this.adminState.users = (this.adminState.users || []).filter(u => String(u.chatId) !== String(targetChatId));
+                    this.closeAdminModals();
+                    this.renderAdminUsers();
+                    this.loadAdminData();
+                } else {
+                    this.showToast(data.error || 'فشل حذف المشترك', 'error');
                 }
             } catch (err) {
                 this.showToast('خطأ في الاتصال: ' + err.message, 'error');

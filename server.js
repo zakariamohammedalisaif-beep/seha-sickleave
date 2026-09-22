@@ -271,7 +271,7 @@ ${statusIcon} اشتراكك ${statusText}
         parse_mode: 'HTML',
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }],
+                [{ text: 'Open', web_app: { url: `${WEB_APP_URL_CACHED}&chatId=${chatId}` } }],
                 [{ text: 'دعوة صديق 🎁', callback_data: 'referrals' }],
                 [{ text: 'باقات الاشتراك 💎', callback_data: 'packages' }],
                 [{ text: 'حالة حسابي 📊', callback_data: 'mystatus' }]
@@ -313,7 +313,7 @@ bot.onText(/\/admin/, async (msg) => {
     }
     
     currentAdminToken = crypto.randomBytes(16).toString('hex');
-    const adminUrl = `${WEB_APP_URL}/index.html?screen=admin&token=${currentAdminToken}`;
+    const adminUrl = `${WEB_APP_URL}/index.html?screen=admin&token=${currentAdminToken}&chatId=${chatId}`;
     const inquiryUrl = `${WEB_APP_URL}/inquiry`;
     const inlineKeyboard = [
         [{ text: '⚙️ لوحة الإدارة (Admin Dashboard)', web_app: { url: adminUrl } }],
@@ -610,32 +610,36 @@ bot.onText(/\/subscribers/i, async (msg) => {
     if (!username || !allowedAdmins.includes(username.toLowerCase())) return;
 
     try {
-        const data = await loadLocalSubscriptions();
-        let message = '📋 **قائمة المشتركين الفعالين:**\n\n';
+        const allSubs = await dataManager.getAllSubscribers();
+        let message = '📋 <b>قائمة المشتركين في النظام:</b>\n\n';
         let count = 0;
         
-        for (const [cid, sub] of Object.entries(data.subscriptions)) {
-            const norm = normalizeSubscription(sub);
-            if (norm.subscriptionDays > 0 || (norm.points && norm.points > 0)) {
-                count++;
-                message += `👤 @${norm.username || 'مجهول'} (${cid})\n`;
-                if (norm.subscriptionDays > 0) message += ` └ 🗓 اشتراك: ${norm.subscriptionDays} يوم\n`;
-                if (norm.points > 0) message += ` └ 🪙 نقاط: ${norm.points} نقطة\n`;
-                message += '\n';
-            }
+        for (const sub of allSubs) {
+            count++;
+            const days = sub.daysRemaining || 0;
+            const pts = sub.points || 0;
+            const statusTag = (days > 0 || pts > 0) 
+                ? (sub.status === 'active' ? '🟢 فعال' : '⏸️ موقوف') 
+                : '⏳ منتهي';
+            const userDisplay = sub.username ? `@${sub.username}` : (sub.name || 'بدون يوزر');
+            message += `👤 <b>${userDisplay}</b> (<code>${sub.chatId}</code>)\n`;
+            message += ` └ 📊 الحالة: ${statusTag}\n`;
+            message += ` └ 🗓 الأيام المتبقية: ${days} يوم\n`;
+            message += ` └ 🪙 النقاط: ${pts} نقطة\n`;
+            message += ` └ 📄 التقارير: ${sub.reportsCount || 0} تقرير\n\n`;
         }
         
         if (count === 0) {
-            message += 'لا يوجد مشتركين فعالين حالياً.';
+            message += 'لا يوجد مشتركين مسجلين حالياً.';
         } else {
-            message += `إجمالي الفعالين: ${count}`;
+            message += `<b>إجمالي المشتركين المسجلين: ${count} مشترك</b>`;
         }
         
         // If message is too long, split it or just send it (Telegram limit is 4096)
         if (message.length > 4000) {
             message = message.substring(0, 4000) + '... (مقطوع)';
         }
-        await bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        await bot.sendMessage(chatId, message, { parse_mode: 'HTML' });
     } catch(err) {
         await bot.sendMessage(chatId, '❌ خطأ: ' + err.message);
     }
@@ -684,7 +688,7 @@ ${referralLink}
     await bot.sendMessage(chatId, referralMsg, {
         reply_markup: {
             inline_keyboard: [[
-                { text: 'Open', web_app: { url: WEB_APP_URL_CACHED } }
+                { text: 'Open', web_app: { url: `${WEB_APP_URL_CACHED}&chatId=${chatId}` } }
             ]]
         }
     });
@@ -765,54 +769,55 @@ app.post('/api/admin/add-user', express.json(), async (req, res) => {
             return res.status(401).json({ success: false, error: 'Unauthorized' });
         }
         
-        const data = await loadLocalSubscriptions();
-        const cleaned = targetUsername.replace(/^@/, '').toLowerCase();
-        
-        // Find if user already exists
-        let foundChatId = null;
-        for (const [cid, sub] of Object.entries(data.subscriptions)) {
-            if (sub.username && sub.username.toLowerCase() === cleaned) {
-                foundChatId = cid;
-                break;
-            }
+        const cleaned = (targetUsername || '').replace(/^@/, '').toLowerCase().trim();
+        if (!cleaned) {
+            return res.status(400).json({ success: false, error: 'اسم المستخدم مطلوب' });
         }
-        
-        if (!foundChatId) {
-            foundChatId = `pending_${cleaned}`;
-            data.subscriptions[foundChatId] = {
-                points: 0,
-                subscriptionDays: 0,
-                subscriptionExpires: null,
-                username: cleaned,
-                reports: [],
-                updatedAt: new Date().toISOString()
-            };
-        }
-        
-        const user = data.subscriptions[foundChatId];
-        user.points = (user.points || 0) + (parseInt(points) || 0);
-        
+
+        // Find or create subscriber in DataManager
+        const user = await dataManager.getSubscriber(null, cleaned);
+        const targetChatId = user.chatId;
+
+        const ptsToAdd = parseInt(points) || 0;
         const addedDays = parseInt(days) || 0;
+        const now = new Date();
+
+        user.points = (user.points || 0) + ptsToAdd;
+        user.balance_points = user.points;
+
         if (addedDays > 0) {
-            const now = new Date();
-            let currentExpires = user.subscriptionExpires ? new Date(user.subscriptionExpires) : now;
+            let currentExpires = user.subscription_end_at ? new Date(user.subscription_end_at) : now;
             if (currentExpires < now) currentExpires = now;
             const newExpires = new Date(currentExpires.getTime() + addedDays * 24 * 60 * 60 * 1000);
+            user.subscription_start_at = user.subscription_start_at || now.toISOString();
+            user.subscription_end_at = newExpires.toISOString();
             user.subscriptionExpires = newExpires.toISOString();
-            user.subscriptionDays = getDaysRemaining(newExpires.toISOString());
+            user.subscription_end_date = newExpires.toISOString();
+            user.subscriptionDays = getRemainingDays(newExpires.toISOString());
+            user.status = 'active';
+            user.plan = 'unlimited';
+            user.report_payment_source = 'unlimited';
         }
+
+        await dataManager.saveSubscriber(targetChatId, user);
         
-        await saveLocalSubscriptions(data);
-        
-        if (!foundChatId.startsWith('pending_')) {
+        await dataManager.logTransaction({
+            admin_chat_id: 'web_admin',
+            target_chat_id: targetChatId,
+            operation: 'add_user',
+            amount: ptsToAdd,
+            new_value: `${addedDays} days, ${ptsToAdd} points`,
+            details: `تفعيل اشتراك للمستخدم @${cleaned}`
+        });
+
+        if (targetChatId && !targetChatId.startsWith('pending_')) {
             try {
                 let notifyMsg = '🎉 تم تحديث اشتراكك من قبل الإدارة!\n';
                 if (addedDays > 0) notifyMsg += `✅ تم تفعيل اشتراك لامحدود لمدة ${addedDays} يوم.\n`;
-                if (parseInt(points) > 0) notifyMsg += `✅ تم إضافة ${points} نقطة لرصيدك.\n`;
+                if (ptsToAdd > 0) notifyMsg += `✅ تم إضافة ${ptsToAdd} نقطة لرصيدك.\n`;
                 notifyMsg += 'يمكنك الآن الاستمتاع بخدمات البوت.';
                 
-                // Use a non-blocking message send
-                bot.sendMessage(foundChatId, notifyMsg).catch(e => console.warn('Could not send to user from API:', e.message));
+                bot.sendMessage(targetChatId, notifyMsg).catch(e => console.warn('Could not send to user from API:', e.message));
             } catch(e) {}
         }
 
@@ -909,6 +914,31 @@ app.post('/api/generate', async (req, res) => {
 
         userSub.updatedAt = new Date().toISOString();
         await saveLocalSubscriptions(data);
+
+        // Also persist permanently into DataManager (reports.json)
+        try {
+            await dataManager.saveReport({
+                id: report.id,
+                report_id: report.id,
+                chat_id: chatIdStr,
+                username: userSub.username,
+                patient_name: report.patientName || (report.data && (report.data.patient_name_ar || report.data.patient_name_en)) || '',
+                national_id: (report.data && report.data.national_id) || report.nationalId || '',
+                issue_date: report.issueDate || (report.data && report.data.issue_date) || new Date().toISOString().slice(0, 10),
+                issue_time: (report.data && report.data.issue_time) || '',
+                type: report.type || 'sick',
+                service_code: (report.data && (report.data.service_code || report.data.leaveId)) || report.id,
+                inquiry_url: report.shortURL || '',
+                short_url: report.shortURL || '',
+                payment_type: normalized.subscriptionDays > 0 ? 'unlimited' : 'points',
+                points_deducted: (!isUpdate && normalized.subscriptionDays <= 0) ? 5 : 0,
+                status: 'issued',
+                data: report.data || {}
+            });
+        } catch (dmErr) {
+            console.warn('saveReport in /api/generate notice:', dmErr.message);
+        }
+
         res.json({ success: true, report, generatedAt: new Date().toISOString() });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -1134,8 +1164,17 @@ app.post('/api/admin/web/user/add', async (req, res) => {
         const subType = plan === 'unlimited' ? 'unlimited' : 'points';
         const paySrc = report_payment_source === 'unlimited' ? 'unlimited' : 'points';
         
+        // Preserve existing user's reports and history if they already exist
+        const existing = await dataManager.getSubscriber(cleanChatId, cleanUser);
+        const preservedReports = (existing && Array.isArray(existing.reports)) ? existing.reports : [];
+        const preservedReportsCount = (existing && existing.reportsCount != null) ? existing.reportsCount : preservedReports.length;
+        const preservedCreatedAt = (existing && existing.createdAt) ? existing.createdAt : start;
+        const preservedReferredBy = (existing && existing.referredBy) ? existing.referredBy : null;
+        const preservedReferralsCount = (existing && existing.referralsCount != null) ? existing.referralsCount : 0;
+        const preservedReferralPoints = (existing && existing.referralPoints != null) ? existing.referralPoints : 0;
+
         const newUser = {
-            username: cleanUser,
+            username: cleanUser || existing?.username || '',
             name: name || (cleanUser ? `@${cleanUser}` : `مستخدم ${cleanChatId}`),
             status: 'active',
             plan: subType,
@@ -1148,12 +1187,12 @@ app.post('/api/admin/web/user/add', async (req, res) => {
             subscription_start_date: start,
             subscription_end_date: end,
             subscriptionExpires: end,
-            reports: [],
-            reportsCount: 0,
-            referredBy: null,
-            referralsCount: 0,
-            referralPoints: 0,
-            createdAt: start,
+            reports: preservedReports,
+            reportsCount: preservedReportsCount,
+            referredBy: preservedReferredBy,
+            referralsCount: preservedReferralsCount,
+            referralPoints: preservedReferralPoints,
+            createdAt: preservedCreatedAt,
             updatedAt: start
         };
         
@@ -1165,7 +1204,7 @@ app.post('/api/admin/web/user/add', async (req, res) => {
             operation: 'add_user',
             amount: pts,
             new_value: `${days} days, ${pts} points, ${paySrc}`,
-            details: `إضافة مشترك جديد Chat ID: ${cleanChatId}`
+            details: `إضافة/تحديث مشترك Chat ID: ${cleanChatId}`
         });
         
         res.json({
@@ -1173,6 +1212,41 @@ app.post('/api/admin/web/user/add', async (req, res) => {
             message: 'تم إضافة المشترك بنجاح وحفظه في قاعدة البيانات الدائمة',
             user: saved
         });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Admin Delete Subscriber Endpoint (Manual Deletion by Admin Only)
+app.post('/api/admin/web/user/delete', async (req, res) => {
+    const auth = verifyAdmin(req);
+    if (!auth.authorized) {
+        return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
+    }
+
+    try {
+        const { chatId } = req.body;
+        const cleanChatId = String(chatId || '').trim();
+        if (!cleanChatId) {
+            return res.status(400).json({ success: false, error: 'Chat ID مطلوب' });
+        }
+
+        if (cleanChatId === OWNER_CHAT_ID || cleanChatId === ADMIN_CHAT_ID) {
+            return res.status(403).json({ success: false, error: 'لا يمكن حذف حساب المالك الرئيسي' });
+        }
+
+        const success = await dataManager.deleteSubscriber(cleanChatId);
+        if (success) {
+            await dataManager.logTransaction({
+                admin_chat_id: auth.adminId,
+                target_chat_id: cleanChatId,
+                operation: 'delete_subscriber',
+                details: `حذف المشترك نهائياً من قاعدة البيانات (Chat ID: ${cleanChatId})`
+            });
+            res.json({ success: true, message: 'تم حذف المشترك بنجاح من قاعدة البيانات' });
+        } else {
+            res.status(404).json({ success: false, error: 'المشترك غير موجود' });
+        }
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -3100,7 +3174,7 @@ const configureChatMenuButton = async (targetChatId = null) => {
             const bodyObj = {
                 menu_button: {
                     type: 'web_app',
-                    text: 'Open', web_app: { url: WEB_APP_URL_CACHED }
+                    text: 'Open', web_app: { url: chatIdVal ? `${WEB_APP_URL_CACHED}&chatId=${chatIdVal}` : WEB_APP_URL_CACHED }
                 }
             };
             if (chatIdVal) {
