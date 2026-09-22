@@ -2499,7 +2499,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
 
         addLog('Sending PDF to Telegram...');
         const docCaption = d.titleAr ? `📄 ${d.titleAr} الخاص بك` : '📄 تقرير الإجازة المرضية الخاص بك';
-        const docFileName = filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf'));
+        const docFileName = filename || (d.type === 'companion' ? 'Patient_Companion_Report.pdf' : (d.type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : (d.type === 'patient_review' ? 'Statement_of_Visit.pdf' : 'sickLeaves.pdf')));
         let message;
         try {
             message = await bot.sendDocument(chatId, pdfBuffer, {

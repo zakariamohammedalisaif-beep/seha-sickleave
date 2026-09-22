@@ -514,7 +514,7 @@ const app = {
                 const repDate = r.issue_date || r.issueDate || (r.data && r.data.issue_date) || '';
                 const repId = r.id || r.report_id || r.service_code || '';
                 const shortUrl = r.inquiry_url || r.short_url || r.shortURL || '';
-                const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : 'إجازة مرضية');
+                const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : (r.type === 'patient_review' ? 'مشهد مراجعة' : 'إجازة مرضية'));
 
                 card.innerHTML = `
                     <div class="report-info">
@@ -793,7 +793,7 @@ const app = {
             const userLabel = r.username ? `@${r.username}` : (r.chat_id ? `ID: ${r.chat_id}` : '-');
             const isPoints = (r.payment_type === 'points' || r.points_deducted > 0);
             const payBadge = isPoints ? '<span class="badge badge-points">🪙 5 نقاط</span>' : '<span class="badge badge-unlimited">♾️ غير محدود</span>';
-            const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة' : 'إجازة مرضية');
+            const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : (r.type === 'patient_review' ? 'مشهد مراجعة' : 'إجازة مرضية'));
 
             html += `
             <div class="admin-subscriber-card" style="margin-bottom:12px; border-left:4px solid #00a896;">
@@ -1460,6 +1460,7 @@ const app = {
         if (type === 'sickleave') title = 'إصدار تقرير إجازة مرضية';
         else if (type === 'companion') title = 'إصدار تقرير مرافقة مريض';
         else if (type === 'companion_review') title = 'إصدار مشهد مراجعة لمرافق';
+        else if (type === 'patient_review') title = 'إصدار مشهد مراجعة';
         document.getElementById('form-title').innerText = title;
         
         const typeSelect = document.getElementById('leave_type');
@@ -1901,6 +1902,9 @@ const app = {
         } else if (type === 'companion_review') {
             titleAr = 'مشهد مراجعة لمرافق';
             titleEn = 'Companion Statement of Visit';
+        } else if (type === 'patient_review') {
+            titleAr = 'مشهد مراجعة';
+            titleEn = 'Statement of Visit';
         }
 
         const reportDataPayload = {
@@ -1975,7 +1979,7 @@ const app = {
                 body: JSON.stringify({
                     chatId: app.state.chatId,
                     reportData: reportDataPayload,
-                    filename: type === 'companion' ? 'Patient_Companion_Report.pdf' : (type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : 'sickLeaves.pdf'),
+                    filename: type === 'companion' ? 'Patient_Companion_Report.pdf' : (type === 'companion_review' ? 'Companion_Attendance_Certificate.pdf' : (type === 'patient_review' ? 'Statement_of_Visit.pdf' : 'sickLeaves.pdf')),
                     reportId: reportId
                 })
             });
