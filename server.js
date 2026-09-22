@@ -2629,10 +2629,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         <div style="height:110px; display:flex; align-items:flex-start; justify-content:center; padding-top:4px;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(shortURL)}" style="width:72px;height:72px;">
         </div>
+        ` : `
+        <div style="height:110px;"></div>
+        `}
         <p style="font-size:11.5px;font-weight:bold;font-family:'Tajawal',sans-serif;text-align:center;margin:0 0 4px 0;line-height:1.4;">للتحقق من بيانات التقرير يرجى التأكد من زيارة موقع منصة صحة<br>الرسمي</p>
         <p style="font-size:9px;color:#222;font-weight:bold;text-align:center;margin:0 0 3px 0;font-style:italic; font-family: 'Arial', sans-serif;">To check the report please visit Seha's offical website</p>
         <p style="font-size:10px;font-weight:bold;text-align:center;margin:0;"><a href="${shortURL}" style="color:#0000EE;text-decoration:underline;">www.seha.sa/#/inquiries/slenquiry</a></p>
-        ` : ''}
       </div>
 
       <!-- Center Vertical Divider -->
