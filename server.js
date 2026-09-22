@@ -2121,52 +2121,92 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             return `${h}:${m} ${ampm}`;
         };
 
-        const getWaitingPeriodPair = (admTime, disTime, customWaitAr) => {
+        const getWaitingPeriodPair = (admTime, disTime, customWaitAr, admDateStr, disDateStr) => {
             if (!admTime || !disTime) {
                 return {
                     ar: customWaitAr || '1 ساعة و -- دقيقة',
                     en: '1 hour and -- mins'
                 };
             }
-            const [h1, m1] = admTime.split(':').map(Number);
-            const [h2, m2] = disTime.split(':').map(Number);
-            if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) {
-                return {
-                    ar: customWaitAr || '1 ساعة و -- دقيقة',
-                    en: '1 hour and -- mins'
+            let totalMins = 0;
+            let hasValidDates = false;
+            if (admDateStr && disDateStr) {
+                const parseDate = (s) => {
+                    if (!s) return null;
+                    const parts = s.split('-');
+                    if (parts.length === 3) {
+                        if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+                        if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                    }
+                    return s;
                 };
+                const d1Iso = parseDate(admDateStr);
+                const d2Iso = parseDate(disDateStr);
+                const dt1 = new Date(`${d1Iso}T${admTime}:00`);
+                const dt2 = new Date(`${d2Iso}T${disTime}:00`);
+                const diffMs = dt2 - dt1;
+                if (!isNaN(diffMs) && diffMs >= 0) {
+                    totalMins = Math.floor(diffMs / (1000 * 60));
+                    hasValidDates = true;
+                }
             }
-            let totalMins = (h2 * 60 + m2) - (h1 * 60 + m1);
-            if (totalMins < 0) totalMins += 24 * 60;
+            if (!hasValidDates) {
+                const [h1, m1] = admTime.split(':').map(Number);
+                const [h2, m2] = disTime.split(':').map(Number);
+                if (isNaN(h1) || isNaN(m1) || isNaN(h2) || isNaN(m2)) {
+                    return {
+                        ar: customWaitAr || '1 ساعة و -- دقيقة',
+                        en: '1 hour and -- mins'
+                    };
+                }
+                totalMins = (h2 * 60 + m2) - (h1 * 60 + m1);
+                if (totalMins < 0) totalMins += 24 * 60;
+            }
             
-            const hrs = Math.floor(totalMins / 60);
+            const totalHours = Math.floor(totalMins / 60);
+            const days = Math.floor(totalHours / 24);
+            const hrs = totalHours % 24;
             const mins = totalMins % 60;
             
-            if (hrs === 0 && mins === 0) {
+            if (days === 0 && hrs === 0 && mins === 0) {
                 return { ar: '0 دقيقة', en: '0 mins' };
             }
             
             const minsEnStr = mins > 0 ? `${mins} mins` : '-- mins';
             const minsArStr = mins > 0 ? `${mins} دقيقة` : '-- دقيقة';
             
+            let enParts = [];
+            if (days === 1) enParts.push('1 day');
+            else if (days > 1) enParts.push(`${days} days`);
+
+            if (hrs === 1) enParts.push('1 hour');
+            else if (hrs > 1) enParts.push(`${hrs} hours`);
+
             let en = '';
-            let ar = '';
-            if (hrs === 0) {
-                en = `${mins} mins`;
-                ar = `${mins} دقيقة`;
-            } else if (hrs === 1) {
-                en = `1 hour and ${minsEnStr}`;
-                ar = `1 ساعة و ${minsArStr}`;
-            } else if (hrs === 2) {
-                en = `2 hours and ${minsEnStr}`;
-                ar = `2 ساعتان و ${minsArStr}`;
-            } else if (hrs >= 3 && hrs <= 10) {
-                en = `${hrs} hours and ${minsEnStr}`;
-                ar = `${hrs} ساعات و ${minsArStr}`;
+            if (enParts.length > 0) {
+                en = `${enParts.join(', ')} and ${minsEnStr}`;
             } else {
-                en = `${hrs} hours and ${minsEnStr}`;
-                ar = `${hrs} ساعة و ${minsArStr}`;
+                en = minsEnStr;
             }
+
+            let arParts = [];
+            if (days === 1) arParts.push('1 يوم');
+            else if (days === 2) arParts.push('يومان');
+            else if (days >= 3 && days <= 10) arParts.push(`${days} أيام`);
+            else if (days > 10) arParts.push(`${days} يوم`);
+
+            if (hrs === 1) arParts.push('1 ساعة');
+            else if (hrs === 2) arParts.push('ساعتان');
+            else if (hrs >= 3 && hrs <= 10) arParts.push(`${hrs} ساعات`);
+            else if (hrs > 10) arParts.push(`${hrs} ساعة`);
+
+            if (mins > 0 || (days === 0 && hrs === 0)) {
+                arParts.push(minsArStr);
+            } else {
+                arParts.push('-- دقيقة');
+            }
+
+            let ar = customWaitAr || arParts.join(' و ');
             
             return { ar, en };
         };
@@ -2182,6 +2222,12 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             if (trimmed === 'تنويم') {
                 return { ar: 'تنويم', en: 'Inpatient' };
             }
+            if (trimmed === 'مراجعة قسم') {
+                return { ar: 'مراجعة قسم', en: 'Department Visit' };
+            }
+            if (trimmed === 'استشارة طبية') {
+                return { ar: 'استشارة طبية', en: 'Medical Consultation' };
+            }
             return { ar: trimmed, en: 'OutPatient' };
         };
 
@@ -2193,8 +2239,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             const admTimeAr = formatTime12Ar(admTimeVal);
             const disTimeEn = formatTime12En(disTimeVal);
             const disTimeAr = formatTime12Ar(disTimeVal);
-            const waitPair = getWaitingPeriodPair(admTimeVal, disTimeVal, d.waitingPeriod);
-            const visitTypePair = mapVisitType(d.visitType || 'عيادات');
+            const waitPair = getWaitingPeriodPair(admTimeVal, disTimeVal, d.waitingPeriod, d.admission_date || d.admissionG || d.startDate, d.discharge_date || d.dischargeG || d.endDate);
+            const visitTypePair = {
+                ar: d.visitType || 'عيادات',
+                en: (d.visitTypeEn && d.visitTypeEn.trim().length > 0) ? d.visitTypeEn.trim() : mapVisitType(d.visitType).en
+            };
 
             tableRowsHtml = `
     <tr>
@@ -2279,8 +2328,11 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             const admTimeAr = formatTime12Ar(admTimeVal);
             const disTimeEn = formatTime12En(disTimeVal);
             const disTimeAr = formatTime12Ar(disTimeVal);
-            const waitPair = getWaitingPeriodPair(admTimeVal, disTimeVal, d.waitingPeriod);
-            const visitTypePair = mapVisitType(d.visitType || 'عيادات');
+            const waitPair = getWaitingPeriodPair(admTimeVal, disTimeVal, d.waitingPeriod, d.admission_date || d.admissionG || d.startDate, d.discharge_date || d.dischargeG || d.endDate);
+            const visitTypePair = {
+                ar: d.visitType || 'عيادات',
+                en: (d.visitTypeEn && d.visitTypeEn.trim().length > 0) ? d.visitTypeEn.trim() : mapVisitType(d.visitType).en
+            };
 
             tableRowsHtml = `
     <tr>
@@ -2670,7 +2722,8 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 admission_time: d.admissionTime || '',
                 discharge_time: d.dischargeTime || '',
                 waiting_period: d.waitingPeriod || '',
-                visit_type: d.visitType || ''
+                visit_type: d.visitType || '',
+                visit_type_en: (d.visitTypeEn && d.visitTypeEn.trim().length > 0) ? d.visitTypeEn.trim() : (d.visitType ? (d.visitType.includes('طوارئ') ? 'Emergency' : (d.visitType.includes('تنويم') ? 'Inpatient' : (d.visitType.includes('قسم') ? 'Department Visit' : (d.visitType.includes('استشارة') ? 'Medical Consultation' : 'OutPatient')))) : 'OutPatient')
             }
         });
 

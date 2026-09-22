@@ -469,18 +469,24 @@
                         <input type="text" id="job_title_en" value="General" required>
                     </div>
 
-                    <!-- Companion Review ONLY: Visit Type Field -->
-                    <div class="form-group" id="visit-type-group" style="display:none;">
-                        <label>نوع الزيارة</label>
-                        <input type="text" id="visit_type" list="visit-types-list" value="عيادات" placeholder="اختر أو اكتب نوع الزيارة..." autocomplete="off">
-                        <datalist id="visit-types-list">
-                            <option value="عيادات">
-                            <option value="عيادات خارجية">
-                            <option value="طوارئ">
-                            <option value="تنويم">
-                            <option value="مراجعة قسم">
-                            <option value="استشارة طبية">
-                        </datalist>
+                    <!-- Review Types ONLY: Visit Type Fields (Arabic & English) -->
+                    <div id="visit-type-group" style="display:none;">
+                        <div class="form-group">
+                            <label>نوع الزيارة (عربي)</label>
+                            <input type="text" id="visit_type" list="visit-types-list" value="عيادات" placeholder="اختر أو اكتب نوع الزيارة..." oninput="app.syncVisitTypeEn()" autocomplete="off">
+                            <datalist id="visit-types-list">
+                                <option value="عيادات">
+                                <option value="عيادات خارجية">
+                                <option value="طوارئ">
+                                <option value="تنويم">
+                                <option value="مراجعة قسم">
+                                <option value="استشارة طبية">
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>نوع الزيارة (إنجليزي)</label>
+                            <input type="text" id="visit_type_en" value="OutPatient" placeholder="Visit Type (English)...">
+                        </div>
                     </div>
 
                     <div class="form-group">

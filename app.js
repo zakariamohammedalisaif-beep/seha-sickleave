@@ -1508,7 +1508,7 @@ const app = {
         if (isReviewType) {
             if (crStep1) crStep1.style.display = 'block';
             if (stdDatesRow) stdDatesRow.style.display = 'none';
-            if (durGroup) durGroup.style.display = 'none';
+            if (durGroup) durGroup.style.display = 'block';
             if (visitTypeGroup) visitTypeGroup.style.display = 'block';
 
             if (document.getElementById('cr_admission_date')) document.getElementById('cr_admission_date').value = todayStr;
@@ -1517,6 +1517,7 @@ const app = {
             if (document.getElementById('discharge_time')) document.getElementById('discharge_time').value = '09:23';
             this.calcWaitingTime();
             if (document.getElementById('visit_type')) document.getElementById('visit_type').value = 'عيادات';
+            if (document.getElementById('visit_type_en')) document.getElementById('visit_type_en').value = 'OutPatient';
         } else {
             if (crStep1) crStep1.style.display = 'none';
             if (stdDatesRow) stdDatesRow.style.display = 'flex';
@@ -1556,21 +1557,29 @@ const app = {
         }
 
         const totalMinutes = Math.floor(diffMs / (1000 * 60));
-        const hours = Math.floor(totalMinutes / 60);
+        const totalHours = Math.floor(totalMinutes / 60);
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
         const minutes = totalMinutes % 60;
 
         let result = '';
-        if (hours === 0 && minutes === 0) {
+        if (days === 0 && hours === 0 && minutes === 0) {
             result = 'أقل من دقيقة';
         } else {
             const parts = [];
+
+            if (days === 1) parts.push('1 يوم');
+            else if (days === 2) parts.push('يومان');
+            else if (days >= 3 && days <= 10) parts.push(`${days} أيام`);
+            else if (days > 10) parts.push(`${days} يوم`);
+
             if (hours === 1) parts.push('1 ساعة');
             else if (hours === 2) parts.push('ساعتان');
             else if (hours >= 3 && hours <= 10) parts.push(`${hours} ساعات`);
             else if (hours > 10) parts.push(`${hours} ساعة`);
 
             if (minutes === 0) {
-                if (hours > 0) parts.push('-- دقيقة');
+                if (days > 0 || hours > 0) parts.push('-- دقيقة');
             } else if (minutes === 1) parts.push('دقيقة واحدة');
             else if (minutes === 2) parts.push('دقيقتان');
             else if (minutes >= 3 && minutes <= 10) parts.push(`${minutes} دقائق`);
@@ -1580,6 +1589,32 @@ const app = {
         }
 
         waitingInput.value = result;
+
+        const durInput = document.getElementById('duration');
+        if (durInput) {
+            if (days > 0) {
+                durInput.value = days;
+            } else if (!durInput.value || parseInt(durInput.value) < 1) {
+                durInput.value = '1';
+            }
+        }
+    },
+
+    syncVisitTypeEn() {
+        const ar = (document.getElementById('visit_type')?.value || '').trim();
+        const enInput = document.getElementById('visit_type_en');
+        if (!enInput) return;
+        const map = {
+            'عيادات': 'OutPatient',
+            'عيادات خارجية': 'OutPatient',
+            'طوارئ': 'Emergency',
+            'تنويم': 'Inpatient',
+            'مراجعة قسم': 'Department Visit',
+            'استشارة طبية': 'Medical Consultation'
+        };
+        if (map[ar]) {
+            enInput.value = map[ar];
+        }
     },
 
     syncHospitalEn() {
@@ -1964,11 +1999,13 @@ const app = {
             const disTimeVal = document.getElementById('discharge_time')?.value || '09:23';
             const waitPeriodVal = document.getElementById('waiting_period')?.value || '1 ساعة و -- دقيقة';
             const visitTypeVal = document.getElementById('visit_type')?.value || 'عيادات';
+            const visitTypeEnVal = document.getElementById('visit_type_en')?.value || 'OutPatient';
 
             reportDataPayload.admissionTime = admTimeVal;
             reportDataPayload.dischargeTime = disTimeVal;
             reportDataPayload.waitingPeriod = waitPeriodVal;
             reportDataPayload.visitType = visitTypeVal;
+            reportDataPayload.visitTypeEn = visitTypeEnVal;
         }
 
         try {
