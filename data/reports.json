@@ -584,5 +584,27 @@
     "created_at": "2026-09-22T04:51:42.051Z",
     "updated_at": "2026-09-22T04:51:42.051Z",
     "data": {}
+  },
+  "GSL_TEST_1790052764820": {
+    "id": "GSL_TEST_1790052764820",
+    "report_id": "GSL_TEST_1790052764820",
+    "chat_id": "test_user_1790052764807",
+    "username": "testuser_70sag",
+    "patient_name": "محمد عبدالله التجريبي",
+    "national_id": "1099887766",
+    "issue_date": "2026-09-22",
+    "issue_time": "",
+    "type": "sick",
+    "service_code": "GSL_TEST_1790052764820",
+    "inquiry_url": "https://seha.sa/test",
+    "short_url": "https://seha.sa/test",
+    "payment_type": "points",
+    "points_deducted": 0,
+    "pdf_ref": null,
+    "file_id": null,
+    "status": "issued",
+    "created_at": "2026-09-22T04:52:44.824Z",
+    "updated_at": "2026-09-22T04:52:44.824Z",
+    "data": {}
   }
 }
