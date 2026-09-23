@@ -422,5 +422,28 @@
     "daysUsed": 0,
     "report_payment_source": "points",
     "updatedAt": "2026-09-22T21:56:36.709Z"
+  },
+  "chat_1790178656459": {
+    "username": "test_real_1790178656459",
+    "name": "@test_real_1790178656459",
+    "status": "active",
+    "plan": "unlimited",
+    "report_payment_source": "unlimited",
+    "points": 75,
+    "balance_points": 75,
+    "subscriptionDays": 45,
+    "subscription_start_at": "2026-09-23T15:50:56.459Z",
+    "subscription_end_at": "2026-11-07T15:50:56.459Z",
+    "subscriptionExpires": "2026-11-07T15:50:56.459Z",
+    "subscription_end_date": "2026-10-23T15:50:56.459Z",
+    "reports": [],
+    "reportsCount": 0,
+    "createdAt": "2026-09-23T15:50:56.459Z",
+    "updatedAt": "2026-09-23T15:50:56.485Z",
+    "referredBy": null,
+    "referralsCount": 0,
+    "referralPoints": 0,
+    "daysRemaining": 45,
+    "daysUsed": 0
   }
 }
