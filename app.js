@@ -545,15 +545,29 @@ const app = {
                 const typeLabel = r.type === 'companion' ? 'مرافقة مريض' : (r.type === 'companion_review' ? 'مشهد مراجعة لمرافق' : (r.type === 'patient_review' ? 'مشهد مراجعة' : 'إجازة مرضية'));
 
                 card.innerHTML = `
-                    <div class="report-info">
+                    <div class="report-info" ${shortUrl ? `onclick="window.open('${shortUrl}', '_blank')" style="cursor:pointer;" title="اضغط للاستعلام عن التقرير"` : ''}>
                         <h4>${pName}</h4>
                         <p>${typeLabel} • ${repDate}</p>
-                        <span style="font-size:11px; color:#00a896; font-family:monospace; font-weight:bold;">${repId}</span>
+                        <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+                            <span style="font-size:11.5px; color:#00a896; font-family:monospace; font-weight:bold;">${repId}</span>
+                            ${shortUrl ? `<span style="font-size:10px; background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; font-weight:bold;">استعلام 🔗</span>` : ''}
+                        </div>
                     </div>
-                    <div class="report-actions" style="display:flex; gap:6px;">
-                        ${shortUrl ? `<button type="button" onclick="window.open('${shortUrl}', '_blank')" title="رابط الاستعلام" style="padding:6px 10px; font-size:13px; background:#e0f2fe; border:1px solid #7dd3fc; border-radius:6px; cursor:pointer;">🔗</button>` : ''}
-                        <button type="button" onclick="app.copyReportId('${repId}')" title="نسخ رقم التقرير" style="padding:6px 10px; font-size:13px; border-radius:6px; cursor:pointer;">📋</button>
-                        <button type="button" onclick="app.editReport('${repId}')" title="تعديل التقرير" style="padding:6px 10px; font-size:13px; border-radius:6px; cursor:pointer;">✏️</button>
+                    <div class="report-actions" style="display:flex; align-items:center; gap:12px; direction:ltr;">
+                        <!-- Pen Icon (Edit) -->
+                        <button type="button" class="btn-action-pen" onclick="app.editReport('${repId}')" title="تعديل التقرير" style="background:transparent; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.18)'" onmouseout="this.style.transform='scale(1)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00a859" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        <!-- Copy Icon (Overlapping Squares) -->
+                        <button type="button" class="btn-action-copy" onclick="app.copyReportId('${repId}')" title="نسخ رقم التقرير" style="background:transparent; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.18)'" onmouseout="this.style.transform='scale(1)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#009ba5" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
                     </div>
                 `;
                 reportsList.appendChild(card);
@@ -562,9 +576,34 @@ const app = {
     },
 
     copyReportId(id) {
-        navigator.clipboard.writeText(id).then(() => {
-            this.showToast('تم نسخ رقم التقرير!');
-        });
+        if (!id) return;
+        const copyText = String(id).trim();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(copyText).then(() => {
+                this.showToast('تم نسخ رقم التقرير بنجاح!');
+            }).catch(() => {
+                this.fallbackCopy(copyText);
+            });
+        } else {
+            this.fallbackCopy(copyText);
+        }
+    },
+
+    fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+            document.execCommand('copy');
+            this.showToast('تم نسخ رقم التقرير بنجاح!');
+        } catch (e) {
+            this.showToast('تعذر النسخ تلقائياً', 'error');
+        }
+        document.body.removeChild(ta);
     },
 
     
@@ -1557,22 +1596,7 @@ const app = {
         
         this.updateWizardUI();
         this.navigate('form');
-        
-        // Auto-fill current date and time
-        const now = new Date();
-        const offset = now.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(now - offset)).toISOString().slice(0, -1);
-        const todayStr = localISOTime.split('T')[0];
-        
-        document.getElementById('issue_date').value = todayStr;
-        document.getElementById('admission_date').value = todayStr;
-        document.getElementById('discharge_date').value = todayStr;
-        
-        let randHours = Math.floor(Math.random() * 24).toString().padStart(2, '0');
-        let randMinutes = Math.floor(Math.random() * 60).toString().padStart(2, '0');
-        document.getElementById('issue_time').value = `${randHours}:${randMinutes}`;
-
-        // Review Types (companion_review and patient_review) Dedicated Visibility and Defaults
+        // Review Types (companion_review and patient_review) Dedicated Visibility
         const isReviewType = (type === 'companion_review' || type === 'patient_review');
         const crStep1 = document.getElementById('companion-review-step1-fields');
         const stdDatesRow = document.getElementById('standard-dates-row');
@@ -1584,19 +1608,37 @@ const app = {
             if (stdDatesRow) stdDatesRow.style.display = 'none';
             if (durGroup) durGroup.style.display = 'block';
             if (visitTypeGroup) visitTypeGroup.style.display = 'block';
-
-            if (document.getElementById('cr_admission_date')) document.getElementById('cr_admission_date').value = todayStr;
-            if (document.getElementById('cr_discharge_date')) document.getElementById('cr_discharge_date').value = todayStr;
-            if (document.getElementById('admission_time')) document.getElementById('admission_time').value = '08:23';
-            if (document.getElementById('discharge_time')) document.getElementById('discharge_time').value = '09:23';
-            this.calcWaitingTime();
-            if (document.getElementById('visit_type')) document.getElementById('visit_type').value = 'عيادات';
-            if (document.getElementById('visit_type_en')) document.getElementById('visit_type_en').value = 'OutPatient';
         } else {
             if (crStep1) crStep1.style.display = 'none';
             if (stdDatesRow) stdDatesRow.style.display = 'flex';
             if (durGroup) durGroup.style.display = 'block';
             if (visitTypeGroup) visitTypeGroup.style.display = 'none';
+        }
+
+        if (!isEdit) {
+            // Auto-fill current date and time
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(now - offset)).toISOString().slice(0, -1);
+            const todayStr = localISOTime.split('T')[0];
+            
+            document.getElementById('issue_date').value = todayStr;
+            document.getElementById('admission_date').value = todayStr;
+            document.getElementById('discharge_date').value = todayStr;
+            
+            let randHours = Math.floor(Math.random() * 24).toString().padStart(2, '0');
+            let randMinutes = Math.floor(Math.random() * 60).toString().padStart(2, '0');
+            document.getElementById('issue_time').value = `${randHours}:${randMinutes}`;
+
+            if (isReviewType) {
+                if (document.getElementById('cr_admission_date')) document.getElementById('cr_admission_date').value = todayStr;
+                if (document.getElementById('cr_discharge_date')) document.getElementById('cr_discharge_date').value = todayStr;
+                if (document.getElementById('admission_time')) document.getElementById('admission_time').value = '08:23';
+                if (document.getElementById('discharge_time')) document.getElementById('discharge_time').value = '09:23';
+                this.calcWaitingTime();
+                if (document.getElementById('visit_type')) document.getElementById('visit_type').value = 'عيادات';
+                if (document.getElementById('visit_type_en')) document.getElementById('visit_type_en').value = 'OutPatient';
+            }
         }
     },
 
@@ -1763,8 +1805,66 @@ const app = {
         }
     },
 
+    formatForDateInput(val) {
+        if (!val) return '';
+        const str = String(val).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        if (/^\d{4}\/\d{2}\/\d{2}$/.test(str)) return str.replace(/\//g, '-');
+        const dmySlash = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (dmySlash) {
+            return `${dmySlash[3]}-${dmySlash[2].padStart(2, '0')}-${dmySlash[1].padStart(2, '0')}`;
+        }
+        const dmyDash = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+        if (dmyDash) {
+            return `${dmyDash[3]}-${dmyDash[2].padStart(2, '0')}-${dmyDash[1].padStart(2, '0')}`;
+        }
+        if (str.includes('T')) {
+            return str.slice(0, 10);
+        }
+        try {
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            }
+        } catch (e) {}
+        return '';
+    },
+
+    formatForTimeInput(val) {
+        if (!val) return '';
+        const str = String(val).trim();
+        if (/^\d{2}:\d{2}$/.test(str)) return str;
+        if (/^\d{1}:\d{2}$/.test(str)) return '0' + str;
+        if (/^\d{2}:\d{2}:\d{2}$/.test(str)) return str.slice(0, 5);
+        const m = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM|ص|م)?/i);
+        if (m) {
+            let h = parseInt(m[1], 10);
+            const min = m[2];
+            const ampm = (m[3] || '').toUpperCase();
+            if ((ampm === 'PM' || ampm === 'م') && h < 12) h += 12;
+            if ((ampm === 'AM' || ampm === 'ص') && h === 12) h = 0;
+            return `${String(h).padStart(2, '0')}:${min}`;
+        }
+        return '';
+    },
+
     editReport(id) {
-        const report = this.state.reports.find(r => (r.id === id || r.report_id === id || r.service_code === id));
+        let report = this.state.reports.find(r => (r.id === id || r.report_id === id || r.service_code === id));
+        if (!report) {
+            try {
+                const rawRep = localStorage.getItem('cached_reports_' + this.state.chatId);
+                if (rawRep) {
+                    const list = JSON.parse(rawRep);
+                    if (Array.isArray(list)) {
+                        report = list.find(r => (r.id === id || r.report_id === id || r.service_code === id));
+                    }
+                }
+            } catch (e) {}
+        }
+
         if (!report) {
             this.showToast('عذراً، بيانات هذا التقرير غير متوفرة للتعديل.', 'error');
             return;
@@ -1784,77 +1884,90 @@ const app = {
         if (submitBtn) submitBtn.innerText = 'حفظ التعديل';
 
         const data = report.data || {};
-        
-        // 1. Leave Type
-        if (document.getElementById('leave_type')) {
-            const code = report.service_code || report.id || '';
-            document.getElementById('leave_type').value = code.startsWith('PSL') ? 'PSL' : 'GSL';
-        }
+        const raw = data.raw_form || {};
 
         const setVal = (elId, val) => {
             const el = document.getElementById(elId);
             if (el && val != null && val !== undefined) el.value = val;
         };
 
-        // 2. Dates & Times
-        const adm = data.admission_date || report.admission_date || report.startDate || '';
-        const dis = data.discharge_date || report.discharge_date || report.endDate || '';
-        const dur = data.duration || report.duration || '1';
-        const issD = data.issue_date || report.issue_date || report.issueDate || '';
-        const issT = data.issue_time || report.issue_time || '';
+        // 1. Leave Type (GSL / PSL)
+        const leaveTypeVal = raw.leave_type || data.leave_type || ((report.service_code || report.id || '').startsWith('PSL') ? 'PSL' : 'GSL');
+        setVal('leave_type', leaveTypeVal);
 
-        setVal('admission_date', adm);
-        setVal('discharge_date', dis);
-        setVal('duration', dur);
-        setVal('issue_date', issD);
-        setVal('issue_time', issT);
+        // 2. Dates & Times
+        const rawAdm = raw.admission_date || data.raw_admission_date || data.admission_date || report.admission_date || report.startDate || '';
+        const rawDis = raw.discharge_date || data.raw_discharge_date || data.discharge_date || report.discharge_date || report.endDate || '';
+        const rawDur = raw.duration || data.duration || report.duration || '1';
+        const rawIssD = raw.issue_date || data.raw_issue_date || data.issue_date || report.issue_date || report.issueDate || '';
+        const rawIssT = raw.issue_time || data.raw_issue_time || data.issue_time || report.issue_time || '';
+
+        const admIso = this.formatForDateInput(rawAdm);
+        const disIso = this.formatForDateInput(rawDis);
+        const issDIso = this.formatForDateInput(rawIssD);
+        const issTIso = this.formatForTimeInput(rawIssT);
+
+        setVal('admission_date', admIso);
+        setVal('discharge_date', disIso);
+        setVal('duration', rawDur);
+        setVal('issue_date', issDIso);
+        setVal('issue_time', issTIso);
 
         // Review specific fields
-        setVal('cr_admission_date', adm);
-        setVal('cr_discharge_date', dis);
-        setVal('cr_duration', dur);
-        setVal('admission_time', data.admission_time || data.admissionTime || '08:23');
-        setVal('discharge_time', data.discharge_time || data.dischargeTime || '09:23');
-        setVal('waiting_period', data.waiting_period || data.waitingPeriod || '');
-        setVal('visit_type', data.visit_type || data.visitType || 'عيادات');
-        setVal('visit_type_en', data.visit_type_en || data.visitTypeEn || 'OutPatient');
+        const rawCrAdm = raw.cr_admission_date || rawAdm;
+        const rawCrDis = raw.cr_discharge_date || rawDis;
+        const rawAdmT = raw.admission_time || data.admission_time || data.admissionTime || '08:23';
+        const rawDisT = raw.discharge_time || data.discharge_time || data.dischargeTime || '09:23';
+
+        setVal('cr_admission_date', this.formatForDateInput(rawCrAdm));
+        setVal('cr_discharge_date', this.formatForDateInput(rawCrDis));
+        setVal('admission_time', this.formatForTimeInput(rawAdmT));
+        setVal('discharge_time', this.formatForTimeInput(rawDisT));
+        
+        const rawWait = raw.waiting_period || data.waiting_period || data.waitingPeriod || '';
+        setVal('waiting_period', rawWait);
+        if (!rawWait) {
+            this.calcWaitingTime();
+        }
+
+        const rawVisitAr = raw.visit_type || data.visit_type || data.visitType || 'عيادات';
+        const rawVisitEn = raw.visit_type_en || data.visit_type_en || data.visitTypeEn || 'OutPatient';
+        setVal('visit_type', rawVisitAr);
+        setVal('visit_type_en', rawVisitEn);
 
         // 3. Patient Info
-        setVal('patient_name_ar', data.patient_name_ar || report.patient_name || report.patientName || '');
-        setVal('patient_name_en', data.patient_name_en || '');
-        setVal('national_id', data.national_id || report.national_id || '');
-        setVal('nationality', data.nationality || 'السعودية');
-        setVal('employer', data.employer || '');
+        setVal('national_id', raw.national_id || data.national_id || report.national_id || report.nationalId || '');
+        setVal('patient_name_ar', raw.patient_name_ar || data.patient_name_ar || report.patient_name || report.patientName || report.nameAr || '');
+        setVal('patient_name_en', raw.patient_name_en || data.patient_name_en || report.patient_name_en || report.nameEn || '');
+        setVal('nationality', raw.nationality || data.nationality || data.nationality_ar || report.nationality || 'السعودية');
+        setVal('employer', raw.employer || data.employer || data.employer_ar || data.employerAr || report.employer || '');
 
         // 4. Escort Info (Companion)
-        setVal('escort_name_ar', data.escort_name_ar || report.companionName || '');
-        setVal('escort_name_en', data.escort_name_en || '');
-        setVal('relation_ar', data.relation_ar || report.relation || '');
-        setVal('relation_en', data.relation_en || '');
+        setVal('escort_name_ar', raw.escort_name_ar || data.escort_name_ar || report.escort_name_ar || report.companionName || (normalizedType.includes('companion') ? (report.patient_name || report.nameAr) : '') || '');
+        setVal('escort_name_en', raw.escort_name_en || data.escort_name_en || report.escort_name_en || '');
+        setVal('relation_ar', raw.relation_ar || data.relation_ar || report.relation_ar || report.relation || '');
+        setVal('relation_en', raw.relation_en || data.relation_en || report.relation_en || '');
 
         // 5. Doctor Info
-        setVal('doctor_name_ar', data.doctor_name_ar || report.doctorName || '');
-        setVal('doctor_name_en', data.doctor_name_en || '');
-        setVal('job_title_ar', data.job_title_ar || report.jobTitle || 'طبيب عام');
-        setVal('job_title_en', data.job_title_en || 'General');
+        setVal('doctor_name_ar', raw.doctor_name_ar || data.doctor_name_ar || report.doctor_name_ar || report.doctorName || report.docNameAr || '');
+        setVal('doctor_name_en', raw.doctor_name_en || data.doctor_name_en || report.doctor_name_en || report.doctorEn || report.docNameEn || '');
+        setVal('job_title_ar', raw.job_title_ar || data.job_title_ar || report.job_title_ar || report.jobTitle || report.positionAr || 'طبيب عام');
+        setVal('job_title_en', raw.job_title_en || data.job_title_en || report.job_title_en || report.positionEn || 'General');
 
         // 6. Hospital Info
-        setVal('hospital_ar', data.hospital_ar || report.hospital || '');
-        setVal('hospital_en', data.hospital_en || '');
+        setVal('hospital_ar', raw.hospital_ar || data.hospital_ar || report.hospital_ar || report.hospital || '');
+        setVal('hospital_en', raw.hospital_en || data.hospital_en || report.hospital_en || '');
         
-        if (data.hospital_type) {
-            const radio = document.querySelector(`input[name="hospital_type"][value="${data.hospital_type}"]`);
-            if (radio) {
-                radio.checked = true;
-                this.toggleLicense();
-            }
+        const rawHospType = raw.hospital_type || data.hospital_type || ((data.license_number || report.licenseNumber) ? 'private' : 'gov');
+        const radio = document.querySelector(`input[name="hospital_type"][value="${rawHospType}"]`);
+        if (radio) {
+            radio.checked = true;
+            this.toggleLicense();
         }
-        if (data.license_number) {
-            setVal('license_number', data.license_number);
-        }
+        setVal('license_number', raw.license_number || data.license_number || report.licenseNumber || '');
 
         // 7. Barcode Option
-        const hasBarcode = (data.include_qr !== false && data.includeQr !== false && report.include_qr !== false);
+        const hasBarcode = raw.barcode_option ? (raw.barcode_option !== 'no') : (data.include_qr !== false && data.includeQr !== false && report.include_qr !== false);
         const yesRadio = document.getElementById('barcode_option_yes');
         const noRadio = document.getElementById('barcode_option_no');
         if (hasBarcode) {
@@ -1862,6 +1975,11 @@ const app = {
         } else {
             if (noRadio) noRadio.checked = true;
         }
+
+        // Reset wizard to Step 1 & update UI
+        this.state.currentStep = 1;
+        this.updateWizardUI();
+        this.showToast('تم تحميل بيانات التقرير للتعديل');
     },
 
     updateWizardUI() {
@@ -2159,6 +2277,51 @@ const app = {
         const includeQr = document.querySelector('input[name="barcode_option"]:checked')?.value !== 'no';
         reportDataPayload.include_qr = includeQr;
         reportDataPayload.includeQr = includeQr;
+
+        // Raw Form Snapshot for 100% accurate editing
+        reportDataPayload.raw_form = {
+            leave_type: leaveTypeValue,
+            admission_date: admission,
+            discharge_date: discharge,
+            duration: duration,
+            issue_date: issueDate,
+            issue_time: issueTime,
+            cr_admission_date: document.getElementById('cr_admission_date')?.value || admission,
+            admission_time: document.getElementById('admission_time')?.value || '08:23',
+            cr_discharge_date: document.getElementById('cr_discharge_date')?.value || discharge,
+            discharge_time: document.getElementById('discharge_time')?.value || '09:23',
+            waiting_period: document.getElementById('waiting_period')?.value || '',
+            national_id: idNum,
+            patient_name_ar: pNameAr,
+            patient_name_en: pNameEn,
+            nationality: nationalityAr,
+            employer: employer,
+            escort_name_ar: escAr,
+            escort_name_en: escEn,
+            relation_ar: relAr,
+            relation_en: relEn,
+            doctor_name_ar: docNameAr,
+            doctor_name_en: docNameEn,
+            job_title_ar: jobAr,
+            job_title_en: jobEn,
+            visit_type: document.getElementById('visit_type')?.value || 'عيادات',
+            visit_type_en: document.getElementById('visit_type_en')?.value || 'OutPatient',
+            hospital_ar: hospAr,
+            hospital_en: hospEn,
+            hospital_type: isPrivate ? 'private' : 'gov',
+            license_number: license,
+            barcode_option: includeQr ? 'yes' : 'no'
+        };
+        reportDataPayload.raw_admission_date = admission;
+        reportDataPayload.raw_discharge_date = discharge;
+        reportDataPayload.raw_issue_date = issueDate;
+        reportDataPayload.raw_issue_time = issueTime;
+        reportDataPayload.leave_type = leaveTypeValue;
+        reportDataPayload.nationality = nationalityAr;
+        reportDataPayload.nationalityAr = nationalityAr;
+        reportDataPayload.nationalityEn = nationalityEn;
+        reportDataPayload.employer = employer;
+        reportDataPayload.employerAr = employer;
 
         try {
             // SERVER-SIDE ATOMIC GENERATION & STORAGE (Rule 1 & Rule 14)

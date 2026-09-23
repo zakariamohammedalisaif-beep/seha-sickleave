@@ -161,15 +161,30 @@ body {
 
 .report-actions {
     display: flex;
+    align-items: center;
     gap: 12px;
+    direction: ltr;
 }
 
 .report-actions button {
-    background: none;
+    background: transparent;
     border: none;
-    font-size: 1.2rem;
-    color: var(--primary);
+    padding: 6px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.report-actions button:hover {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.report-actions button:active {
+    transform: scale(0.95);
 }
 
 /* FAB */
