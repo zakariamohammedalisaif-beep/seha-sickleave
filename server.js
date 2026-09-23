@@ -1334,6 +1334,7 @@ app.post('/api/admin/web/user/update', async (req, res) => {
                 }
                 const prev = user.report_payment_source || 'points';
                 user.report_payment_source = paymentSource;
+                user.plan = paymentSource;
                 dataManager.logTransaction({
                     admin_chat_id: auth.adminId,
                     target_chat_id: cleanChatId,
@@ -2143,7 +2144,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
         const existingRep = await dataManager.getReportById(currentRepId);
         const isUpdate = !!existingRep;
 
-        const isUnlimitedActive = (userSub.report_payment_source === 'unlimited' || userSub.plan === 'unlimited') && userSub.daysRemaining > 0;
+        const isUnlimitedActive = (userSub.report_payment_source === 'unlimited') && (userSub.daysRemaining > 0);
         let pointsToDeduct = 0;
 
         if (!isUpdate) {
@@ -2151,7 +2152,7 @@ app.post('/api/generate-native-pdf', async (req, res) => {
                 pointsToDeduct = 0;
             } else {
                 if ((userSub.points || 0) < 5) {
-                    return res.status(403).json({ success: false, error: '❌ عذراً، رصيدك غير كافٍ. تحتاج إلى 5 نقاط أو اشتراك فعال لإصدار هذا التقرير.' });
+                    return res.status(403).json({ success: false, error: '❌ عذراً، رصيدك غير كافٍ. تحتاج إلى 5 نقاط لإصدار هذا التقرير.' });
                 }
                 pointsToDeduct = 5;
             }

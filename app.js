@@ -478,14 +478,17 @@ const app = {
     },
 
     updateDashboardUI() {
-        document.getElementById('points-balance-display').innerText = this.state.points;
+        document.getElementById('points-balance-display').innerText = this.state.points || 0;
         const subBadge = document.getElementById('sub-status-badge');
-        if (this.state.subscriptionDays > 0) {
+        const isUnlimited = (this.state.report_payment_source === 'unlimited') && (this.state.subscriptionDays > 0);
+
+        if (isUnlimited) {
             subBadge.innerText = `اشتراك لامحدود - متبقي ${this.state.subscriptionDays} يوم`;
             subBadge.style.color = '#009688';
-        } else if (this.state.points >= 5) {
-            subBadge.innerText = `اشتراك بالنقاط - متبقي ${Math.floor(this.state.points / 5)} تقرير`;
-            subBadge.style.color = '#009688';
+        } else if (this.state.report_payment_source === 'points' || (this.state.points >= 5)) {
+            const reportsLeft = Math.floor((this.state.points || 0) / 5);
+            subBadge.innerText = `اشتراك بالنقاط - متبقي ${reportsLeft} تقرير (${this.state.points || 0} نقطة)`;
+            subBadge.style.color = (this.state.points || 0) >= 5 ? '#009688' : '#e74c3c';
         } else {
             subBadge.innerText = 'لا يوجد اشتراك فعال';
             subBadge.style.color = '#e74c3c';

@@ -228,9 +228,15 @@ const normalizeSubscription = (user) => {
         user.daysUsed = 0;
     }
 
-    // Plan and payment source
-    user.plan = user.plan || (user.daysRemaining > 0 ? 'unlimited' : 'points');
-    user.report_payment_source = user.report_payment_source || (user.plan === 'unlimited' ? 'unlimited' : 'points');
+    // Plan and payment source synchronization
+    if (user.report_payment_source) {
+        user.plan = user.report_payment_source;
+    } else if (user.plan) {
+        user.report_payment_source = user.plan;
+    } else {
+        user.report_payment_source = (user.daysRemaining > 0 ? 'unlimited' : 'points');
+        user.plan = user.report_payment_source;
+    }
 
     return user;
 };
@@ -451,11 +457,11 @@ class DataManager {
                 owner.status = 'active';
                 needsSave = true;
             }
-            if (owner.plan !== 'unlimited') {
+            if (!owner.plan) {
                 owner.plan = 'unlimited';
                 needsSave = true;
             }
-            if (owner.report_payment_source !== 'unlimited') {
+            if (!owner.report_payment_source) {
                 owner.report_payment_source = 'unlimited';
                 needsSave = true;
             }
