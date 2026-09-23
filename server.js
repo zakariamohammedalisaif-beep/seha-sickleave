@@ -24,6 +24,7 @@ const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '-1002184109677';
 
 // DataManager: Persistent, Atomic, and Real-Time Storage
 const { dataManager, normalizeSubscription, getRemainingDays, withDbLock, OWNER_CHAT_ID, OWNER_USERNAME } = require('./dataManager');
+const getDaysRemaining = getRemainingDays;
 
 // Transaction logging helper (delegates to DataManager)
 const logTransaction = async (dataOrEntry, entryDetails = null) => {
@@ -342,7 +343,8 @@ bot.onText(/\/addsub\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const username = msg.from?.username;
     
     const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
+    const isOwner = (chatId === ADMIN_CHAT_ID || chatId === '6316398194');
+    if (!isOwner && (!username || !allowedAdmins.includes(username.toLowerCase()))) {
         await bot.sendMessage(chatId, 'ليس لديك صلاحية المسؤول لتنفيذ هذا الأمر.');
         return;
     }
@@ -373,7 +375,8 @@ bot.onText(/\/addpoints\s+@?(\w+)\s+(\d+)/i, async (msg, match) => {
     const username = msg.from?.username;
     
     const allowedAdmins = [ADMIN_USERNAME.toLowerCase(), 'zakaria_2025', 'zakmmm_1211'];
-    if (!username || !allowedAdmins.includes(username.toLowerCase())) {
+    const isOwner = (chatId === ADMIN_CHAT_ID || chatId === '6316398194');
+    if (!isOwner && (!username || !allowedAdmins.includes(username.toLowerCase()))) {
         await bot.sendMessage(chatId, 'ليس لديك صلاحية المسؤول لتنفيذ هذا الأمر.');
         return;
     }
@@ -773,10 +776,12 @@ app.get(['/health', '/api/health'], (req, res) => {
 // Admin: Add user securely
 app.post('/api/admin/add-user', express.json(), async (req, res) => {
     try {
-        const { token, targetUsername, points, days } = req.body;
-        if (!currentAdminToken || token !== currentAdminToken) {
-            return res.status(401).json({ success: false, error: 'Unauthorized' });
+        const auth = verifyAdmin(req);
+        if (!auth.authorized) {
+            return res.status(401).json({ success: false, error: 'غير مصرح لك بالوصول (Admin Only)' });
         }
+        
+        const { targetUsername, points, days } = req.body;
         
         const cleaned = (targetUsername || '').replace(/^@/, '').toLowerCase().trim();
         if (!cleaned) {
@@ -1158,9 +1163,20 @@ app.post('/api/admin/web/user/add', async (req, res) => {
     
     try {
         const { chatId, username, name, subscriptionDays, plan, balance_points, report_payment_source } = req.body;
-        const cleanChatId = String(chatId || '').trim();
-        if (!cleanChatId) {
-            return res.status(400).json({ success: false, error: 'يجب إدخال الـ Chat ID' });
+        let cleanChatId = String(chatId || '').trim();
+        const cleanUser = username ? String(username).replace(/^@/, '').trim().toLowerCase() : '';
+        if (!cleanChatId && !cleanUser) {
+            return res.status(400).json({ success: false, error: 'يجب إدخال الـ Chat ID أو اسم المستخدم (Username)' });
+        }
+
+        // If cleanChatId was not provided, check if user already exists by username
+        if (!cleanChatId || cleanChatId.startsWith('pending_')) {
+            const existingByUsername = await dataManager.getSubscriber(null, cleanUser);
+            if (existingByUsername && existingByUsername.chatId && !existingByUsername.chatId.startsWith('pending_')) {
+                cleanChatId = existingByUsername.chatId;
+            } else if (!cleanChatId) {
+                cleanChatId = `pending_${cleanUser}`;
+            }
         }
         
         const days = parseInt(subscriptionDays) || 0;
@@ -1169,7 +1185,6 @@ app.post('/api/admin/web/user/add', async (req, res) => {
         const start = now.toISOString();
         const end = days > 0 ? new Date(now.getTime() + days * 86400000).toISOString() : null;
         
-        const cleanUser = username ? String(username).replace(/^@/, '').trim().toLowerCase() : '';
         const subType = plan === 'unlimited' ? 'unlimited' : 'points';
         const paySrc = report_payment_source === 'unlimited' ? 'unlimited' : 'points';
         
@@ -1358,7 +1373,11 @@ app.post('/api/admin/web/user/update', async (req, res) => {
                 user.subscription_end_at = newEnd.toISOString();
                 user.subscriptionExpires = newEnd.toISOString();
                 user.subscription_end_date = newEnd.toISOString();
+                user.subscriptionDays = getRemainingDays(newEnd.toISOString());
+                user.daysRemaining = user.subscriptionDays;
                 user.status = 'active'; // Always reactivate on renewal
+                user.plan = 'unlimited';
+                user.report_payment_source = 'unlimited';
                 dataManager.logTransaction({
                     admin_chat_id: auth.adminId,
                     target_chat_id: cleanChatId,
@@ -1387,6 +1406,18 @@ app.post('/api/admin/web/user/update', async (req, res) => {
             }
             return user;
         });
+
+        // Notify user via Telegram in real time if they have an active Telegram chat
+        if (cleanChatId && !cleanChatId.startsWith('pending_')) {
+            try {
+                if (action === 'add_points') {
+                    bot.sendMessage(cleanChatId, `🎉 تم إضافة ${amount} نقطة لرصيدك من قبل الإدارة!\nرصيدك الحالي: ${updated.points} نقطة.`).catch(() => {});
+                } else if (action === 'renew') {
+                    const daysLeft = updated.daysRemaining || days;
+                    bot.sendMessage(cleanChatId, `🎉 تم تجديد اشتراكك بنجاح لمدة ${days} يوم من قبل الإدارة!\nأيامك المتبقية: ${daysLeft} يوم.`).catch(() => {});
+                }
+            } catch (e) {}
+        }
         
         res.json({
             success: true,

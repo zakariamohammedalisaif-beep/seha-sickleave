@@ -1104,8 +1104,8 @@ const app = {
                 days = parseInt(document.getElementById('admin_add_custom_days').value) || 0;
             }
 
-            if (!chatId) {
-                this.showToast('الرجاء إدخال الـ Chat ID', 'error');
+            if (!chatId && !username) {
+                this.showToast('الرجاء إدخال الـ Chat ID أو اسم المستخدم (Username)', 'error');
                 return;
             }
 
