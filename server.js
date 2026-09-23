@@ -3158,6 +3158,15 @@ const startBackgroundScheduler = () => {
                     }
                 }
             }
+            // Keep-alive self-ping on Render every 10 minutes to prevent cold-start spin-down
+            if (isProduction && WEB_APP_URL && WEB_APP_URL.startsWith('https://')) {
+                try {
+                    const https = require('https');
+                    https.get(`${WEB_APP_URL}/health`, (hRes) => {
+                        hRes.resume();
+                    }).on('error', () => {});
+                } catch (e) {}
+            }
         } catch (schedErr) {
             console.warn('[Scheduler] Periodic maintenance notice:', schedErr.message);
         }
@@ -3165,14 +3174,6 @@ const startBackgroundScheduler = () => {
     if (schedulerInterval.unref) schedulerInterval.unref();
     console.log('✓ Background scheduler running (every 60s)');
 };
-
-// Ensure SPA routes always return index.html instead of Not Found
-app.get('*', (req, res) => {
-    if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
-        return res.status(404).json({ success: false, error: 'Route not found' });
-    }
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
 
 // Set Telegram Chat Menu Button (Open button)
 const configureChatMenuButton = async (targetChatId = null) => {
@@ -3227,6 +3228,59 @@ const configureChatMenuButton = async (targetChatId = null) => {
     }
 };
 
+// Manual setup endpoint - visit /setup or /api/setup to re-configure webhook & menu button
+app.get(['/setup', '/api/setup'], async (req, res) => {
+    try {
+        await configureChatMenuButton();
+        if (isProduction) {
+            const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
+            await bot.setWebHook(webhookUrl);
+            res.json({
+                success: true,
+                message: `Webhook and Menu Button configured successfully`,
+                webhookUrl,
+                webAppUrl: WEB_APP_URL_CACHED
+            });
+        } else {
+            res.json({
+                success: true,
+                message: 'Menu Button configured (local polling mode)',
+                webAppUrl: WEB_APP_URL_CACHED
+            });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Diagnostic endpoint to inspect Bot API & Webhook status anytime
+app.get('/api/bot-status', async (req, res) => {
+    try {
+        let me = null;
+        let webhook = null;
+        try { me = await bot.getMe(); } catch (e) { me = { error: e.message }; }
+        try { webhook = await bot.getWebhookInfo(); } catch (e) { webhook = { error: e.message }; }
+
+        res.json({
+            success: true,
+            isProduction,
+            bot: me,
+            webhook,
+            serverUrl: WEB_APP_URL
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Ensure SPA routes always return index.html instead of Not Found
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api') || req.path.startsWith(`/webhook/${TOKEN}`)) {
+        return res.status(404).json({ success: false, error: 'Route not found' });
+    }
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Start Server
 const startServer = async () => {
     try {
@@ -3271,31 +3325,6 @@ const startServer = async () => {
         process.exit(1);
     }
 };
-
-// Manual setup endpoint - visit /setup to re-configure webhook & menu button (admin use)
-app.get('/setup', async (req, res) => {
-    try {
-        await configureChatMenuButton();
-        if (isProduction) {
-            const webhookUrl = `${WEB_APP_URL}/webhook/${TOKEN}`;
-            await bot.setWebHook(webhookUrl);
-            res.json({
-                success: true,
-                message: `Webhook and Menu Button configured successfully`,
-                webhookUrl,
-                webAppUrl: WEB_APP_URL_CACHED
-            });
-        } else {
-            res.json({
-                success: true,
-                message: 'Menu Button configured (local polling mode)',
-                webAppUrl: WEB_APP_URL_CACHED
-            });
-        }
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 // Start server and bootstrap Owner
 const serverPromise = startServer().then(async (srv) => {

@@ -12,7 +12,7 @@ if (!gitToken && fsSync.existsSync(path.join(__dirname, '.git/config'))) {
         if (m) gitToken = m[1];
     } catch (e) {}
 }
-const GITHUB_TOKEN = gitToken;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || gitToken || '';
 const GITHUB_REPO = process.env.GITHUB_REPO || 'zakariamohammedalisaif-beep/seha-sickleave';
 
 function githubApiRequest(method, apiPath, body = null) {
