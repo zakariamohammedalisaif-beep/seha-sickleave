@@ -2735,6 +2735,20 @@ app.post('/api/generate-native-pdf', async (req, res) => {
             } else if (fsSync.existsSync(chromePath)) {
                 launchOptions.executablePath = chromePath;
             }
+        } else {
+            const fsSync = require('fs');
+            const linuxPaths = [
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium'
+            ];
+            for (const p of linuxPaths) {
+                if (fsSync.existsSync(p)) {
+                    launchOptions.executablePath = p;
+                    break;
+                }
+            }
         }
         const browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
