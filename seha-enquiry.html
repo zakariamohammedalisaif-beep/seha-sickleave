@@ -349,10 +349,6 @@
                 <span id="resDate"></span>
             </div>
             <div class="result-row">
-                <span class="result-label">المنشأة الصحية:</span>
-                <span id="resHosp"></span>
-            </div>
-            <div class="result-row">
                 <span class="result-label">الطبيب المعالج:</span>
                 <span id="resDoc"></span>
             </div>
@@ -429,7 +425,6 @@
                     document.getElementById('resNid').innerText = urlParams.get('nid') || document.getElementById('nationalId').value;
                     document.getElementById('resDur').innerText = (urlParams.get('dur') || '-') + ' يوم / أيام';
                     document.getElementById('resDate').innerText = urlParams.get('date') || '-';
-                    document.getElementById('resHosp').innerText = urlParams.get('hosp') || '-';
                     document.getElementById('resDoc').innerText = (urlParams.get('doc') || '-') + (urlParams.get('pos') ? ' (' + urlParams.get('pos') + ')' : '');
                     
                     document.getElementById('formContainer').style.display = 'none';
