@@ -846,6 +846,9 @@ app.post('/api/admin/add-user', express.json(), async (req, res) => {
 app.get('/api/user/:chatId', async (req, res) => {
     try {
         const { chatId } = req.params;
+        if (!chatId || chatId === 'null' || chatId === 'undefined' || chatId.trim() === '') {
+            return res.status(400).json({ success: false, error: 'Valid chatId required' });
+        }
         const username = req.query.username;
         const user = await dataManager.getSubscriber(chatId, username);
         const reports = await dataManager.getUserReports(chatId);
@@ -868,6 +871,9 @@ app.get('/api/user/:chatId', async (req, res) => {
 app.get('/api/user/:chatId/reports', async (req, res) => {
     try {
         const { chatId } = req.params;
+        if (!chatId || chatId === 'null' || chatId === 'undefined' || chatId.trim() === '') {
+            return res.json({ success: true, reports: [] });
+        }
         const reports = await dataManager.getUserReports(chatId);
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
         res.json({ success: true, reports });

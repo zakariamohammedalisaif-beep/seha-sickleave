@@ -759,14 +759,17 @@ class DataManager {
     // Subscriber Report History (Strict backend isolation)
     async getUserReports(chatId) {
         return withDbLock(async () => {
+            if (!chatId || String(chatId).trim() === '' || String(chatId) === 'null' || String(chatId) === 'undefined') {
+                return [];
+            }
             const reports = await readJsonSafe(reportsFile, {});
             const subs = await readJsonSafe(subscriptionsFile, {});
-            const chatIdStr = String(chatId);
+            const chatIdStr = String(chatId).trim();
             const userReports = [];
 
             // 1. Gather all reports belonging to chatIdStr from reports.json
             for (const rep of Object.values(reports)) {
-                if (String(rep.chat_id) === chatIdStr) {
+                if (rep && rep.chat_id && String(rep.chat_id) === chatIdStr) {
                     userReports.push(rep);
                 }
             }
@@ -778,7 +781,7 @@ class DataManager {
                 for (const r of user.reports) {
                     const rId = typeof r === 'string' ? r : (r.id || r.report_id);
                     if (rId && !userReports.some(x => x.id === rId || x.report_id === rId)) {
-                        if (reports[rId] && String(reports[rId].chat_id) === chatIdStr) {
+                        if (reports[rId] && reports[rId].chat_id && String(reports[rId].chat_id) === chatIdStr) {
                             userReports.push(reports[rId]);
                         } else if (typeof r === 'object' && r.id) {
                             const restoredRep = {

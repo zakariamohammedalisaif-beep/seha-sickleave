@@ -398,6 +398,16 @@ const app = {
         } catch (e) {
             console.log('No cached local data found');
         }
+        try {
+            const rawRep = localStorage.getItem('cached_reports_' + this.state.chatId);
+            if (rawRep) {
+                const cachedRep = JSON.parse(rawRep);
+                if (Array.isArray(cachedRep)) {
+                    this.state.reports = cachedRep.filter(r => r && r.chat_id && String(r.chat_id) === String(this.state.chatId));
+                    this.renderReports();
+                }
+            }
+        } catch (e) {}
     },
 
     async fetchAsBase64(url) {
@@ -452,7 +462,10 @@ const app = {
                         const repData = await repRes.json();
                         if (repData.success && Array.isArray(repData.reports)) {
                             // Strictly isolate reports to only those belonging to current user
-                            this.state.reports = repData.reports.filter(r => !r.chat_id || String(r.chat_id) === String(this.state.chatId));
+                            this.state.reports = repData.reports.filter(r => r && r.chat_id && String(r.chat_id) === String(this.state.chatId));
+                            try {
+                                localStorage.setItem('cached_reports_' + this.state.chatId, JSON.stringify(this.state.reports));
+                            } catch (e) {}
                             this.renderReports();
                         }
                     }
@@ -2171,7 +2184,10 @@ const app = {
             if (data.daysRemaining != null) app.state.subscriptionDays = data.daysRemaining;
             
             if (data.report) {
-                app.state.reports = [data.report, ...app.state.reports.filter(r => r.id !== reportId)];
+                app.state.reports = [data.report, ...app.state.reports.filter(r => r.id !== reportId && r.report_id !== reportId)];
+                try {
+                    localStorage.setItem('cached_reports_' + app.state.chatId, JSON.stringify(app.state.reports));
+                } catch (e) {}
             }
 
             app.updateDashboardUI();
